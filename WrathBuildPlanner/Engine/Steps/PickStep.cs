@@ -26,6 +26,7 @@ namespace WrathBuildPlanner.Engine.Steps {
             public IFeatureSelectionItem Parent;
             public StepResult Failure;
             public bool Done;
+            public bool WasAlreadySet;
         }
 
         public static List<PickEntry> Picks(ApplyContext context) =>
@@ -33,20 +34,84 @@ namespace WrathBuildPlanner.Engine.Steps {
 
         public void Run(ApplyContext context) {
             var pending = Picks(context).Select(e => new Pending { Entry = e, Chain = new List<string>(e.Pick) }).ToList();
+            foreach (var pick in pending) Resume(context, pick);
 
+            // Picks to a fixed point, then spells to a fixed point, and again while spells still change something.
+            // Order matters: the game can drop spell picks when a feature is selected after them, and the spell
+            // pass re-selects whatever is missing.
             for (int pass = 0; pass < MaxPasses; pass++) {
-                bool changed = false;
-                foreach (var pick in pending.Where(p => !p.Done)) {
-                    if (TryAdvance(context, pick)) changed = true;
+                bool picked = true;
+                for (int round = 0; picked && round < MaxPasses; round++) {
+                    picked = false;
+                    foreach (var pick in pending.Where(p => !p.Done)) {
+                        var before = SpellStep.PickedNow(context);
+                        if (!TryAdvance(context, pick)) continue;
+                        picked = true;
+                        var lost = before.Except(SpellStep.PickedNow(context)).ToList();
+                        if (lost.Count > 0)
+                            Logging.Log.Engine.Warn($"selecting '{pick.Chain[pick.Position - 1]}' made the game drop spell picks: {string.Join(", ", lost)} (re-selected by the spell pass)");
+                    }
                 }
-                if (interleave != null && interleave(context)) changed = true;
-                if (!changed) break;
+                bool spells = false;
+                for (int round = 0; interleave != null && round < MaxPasses && interleave(context); round++) spells = true;
+                if (!spells) break;
             }
 
             foreach (var pick in pending) {
-                if (pick.Done) context.Report.Steps.Add(StepResult.Applied(pick.Entry.Label));
+                if (pick.WasAlreadySet) context.Report.Steps.Add(StepResult.Already(pick.Entry.Label));
+                else if (pick.Done) context.Report.Steps.Add(StepResult.Applied(pick.Entry.Label));
                 else context.Report.Steps.Add(pick.Failure ?? StepResult.Open(pick.Entry.Label, OpenReason.SelectionMissing));
             }
+        }
+
+        // Links of the chain that are already selected in this level are skipped, so a second apply (or a pick the
+        // player made by hand) is reported as set instead of as a missing selection.
+        static void Resume(ApplyContext context, Pending pick) {
+            int matched = Selected(context, pick.Entry.In, pick.Chain, out var last);
+            if (matched == 0 && pick.Chain.Count == 1 && NameMatcher.TrySplitParenChain(pick.Chain[0], out string head, out string tail)) {
+                var split = new List<string> { head, tail };
+                int splitMatched = Selected(context, pick.Entry.In, split, out var splitLast);
+                if (splitMatched > 0) {
+                    pick.Chain = split;
+                    matched = splitMatched;
+                    last = splitLast;
+                }
+            }
+            if (matched == 0) return;
+            pick.Position = matched;
+            pick.Parent = last;
+            if (matched >= pick.Chain.Count) {
+                pick.Done = true;
+                pick.WasAlreadySet = true;
+            }
+        }
+
+        // How many leading links of the chain are selected already, and the item of the last one.
+        static int Selected(ApplyContext context, string scope, List<string> chain, out IFeatureSelectionItem last) {
+            last = null;
+            var selected = context.State.Selections.Where(s => s.Selected && s.SelectedItem != null).ToList();
+            int matched = 0;
+            foreach (string name in chain) {
+                IEnumerable<FeatureSelectionState> pool;
+                if (matched > 0) {
+                    var parent = last;
+                    pool = selected.Where(s => ReferenceEquals(s.Selection, parent.Feature));
+                } else if (scope != null) {
+                    var outcome = NameMatcher.Match(scope, selected.Select(GameNames.OfSelection).ToList());
+                    if (outcome.Kind == MatchKind.None) return 0;
+                    pool = outcome.Kind == MatchKind.Unique
+                        ? new List<FeatureSelectionState> { (FeatureSelectionState)outcome.Match.Tag }
+                        : outcome.Tied.Select(t => (FeatureSelectionState)t.Tag).ToList();
+                } else {
+                    pool = selected;
+                }
+                var hit = pool.FirstOrDefault(s =>
+                    NameMatcher.Match(name, new List<NameCandidate> { GameNames.OfItem(s.SelectedItem) }).Kind == MatchKind.Unique);
+                if (hit == null) break;
+                last = hit.SelectedItem;
+                matched++;
+            }
+            return matched;
         }
 
         // One link of the chain. Returns true when a selection was made.

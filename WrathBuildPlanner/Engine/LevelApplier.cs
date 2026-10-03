@@ -52,7 +52,8 @@ namespace WrathBuildPlanner.Engine {
 
             report.History = History(context);
 
-            foreach (var step in StepsFor(mode)) {
+            var spells = new SpellStep(context);
+            foreach (var step in StepsFor(mode, spells)) {
                 try {
                     step.Run(context);
                 } catch (Exception e) {
@@ -61,13 +62,20 @@ namespace WrathBuildPlanner.Engine {
                 }
             }
 
+            try {
+                spells.Report(context);
+            } catch (Exception e) {
+                Logging.Log.Engine.Error(e, "spell report failed");
+            }
+
             foreach (var result in report.Steps)
                 Logging.Log.Engine.Info($"  {result.Status} {result.Label}{(result.Status == StepStatus.Open ? " (" + result.Reason + (result.Detail != null ? ": " + result.Detail : "") + ")" : "")}");
             return report;
         }
 
-        static IEnumerable<IApplyStep> StepsFor(LevelUpState.CharBuildMode mode) {
+        static IEnumerable<IApplyStep> StepsFor(LevelUpState.CharBuildMode mode, SpellStep spells) {
             if (mode == LevelUpState.CharBuildMode.Mythic) {
+                yield return new MythicPathStep();
                 yield return new PickStep();
                 yield break;
             }
@@ -84,7 +92,7 @@ namespace WrathBuildPlanner.Engine {
                 yield return new AttributePointStep();
             }
             yield return new SkillStep();
-            yield return new PickStep();
+            yield return new PickStep(spells.Pass);
         }
 
         static HistoryCheck History(ApplyContext context) {

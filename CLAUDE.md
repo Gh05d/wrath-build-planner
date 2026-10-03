@@ -19,3 +19,9 @@ In-game tests: skill `testing-mods-in-game`, scripts in `tests/ingame/`.
 - Names are matched only against the candidates of the selection at hand (`Core/NameMatcher`), never the whole blueprint database.
 - The mod never commits a level.
 - Re-read `controller.State` after every controller call; never hold a `FeatureSelectionState` across calls.
+
+## Verified behaviour
+
+- **Second language pack (2026-10-03):** `LocalizationManager.LoadPack(Locale)` + `LocalizedString.LoadString(pack, locale)` resolve names in another language while the game keeps its own (`TestHooks.NamesIn deDE` in an English game returned Arkanist/Barbar/Barde). `GameNames.English` uses this, so English build names match in a non-English game. Checked in the reverse direction only — the game's language setting was not switched.
+- **Spell picks reset after a later feature pick (2026-10-03):** when a feature is selected in a later frame, the game resets that level's spell choices (GameLogFull: `Invalid action: SelectSpell`). `SpellStep` therefore works from the live state and a second Apply restores the spells.
+- **Page titles** come from `FeatureSelectionExtensions.GetMenuLabel(selectionState)`, not from the selection blueprint's name (wizard school: page "School", blueprint "Specialist School").

@@ -54,5 +54,38 @@ namespace WrathBuildPlanner.Engine {
             sb.Append(" | party: " + string.Join(", ", Game.Instance.Player.PartyAndPets.Select(p => p.Blueprint.name)));
             return sb.ToString();
         }
+
+        /// <summary>Test helper: fill every still-open feature selection with its first selectable item.</summary>
+        static string FillRest() {
+            var controller = WindowTracker.Controller;
+            if (controller == null) return "NO WINDOW";
+            int filled = 0;
+            for (int i = 0; i < 40; i++) {
+                var selection = controller.State.Selections.FirstOrDefault(s => !s.Selected);
+                if (selection == null) break;
+                var unit = controller.GetUnit(selection.Selection).Descriptor;
+                var item = selection.Selection.ExtractSelectionItems(controller.Unit.Descriptor, controller.Preview.Descriptor)
+                    .FirstOrDefault(candidate => selection.Selection.CanSelect(unit, controller.State, selection, candidate));
+                var spellsBefore = controller.State.SpellSelections.Sum(d => d.LevelCount.Sum(l => l?.SpellSelections?.Count(x => x != null) ?? 0) + (d.ExtraSelected?.Count(x => x != null) ?? 0));
+                if (item == null || !controller.SelectFeature(selection, item)) break;
+                int spellsAfter = controller.State.SpellSelections.Sum(d => d.LevelCount.Sum(l => l?.SpellSelections?.Count(x => x != null) ?? 0) + (d.ExtraSelected?.Count(x => x != null) ?? 0));
+                if (spellsAfter < spellsBefore) Logging.Log.Engine.Warn($"FillRest: selecting '{item.Feature?.name}' dropped {spellsBefore - spellsAfter} spell pick(s)");
+                filled++;
+            }
+            return "filled " + filled;
+        }
+
+        /// <summary>
+        /// Class names resolved against a second language pack while the game keeps its own language —
+        /// the mechanism GameNames.English relies on, checkable without changing the game's settings.
+        /// </summary>
+        static string NamesIn(string locale) {
+            var target = (Kingmaker.Localization.Shared.Locale)System.Enum.Parse(typeof(Kingmaker.Localization.Shared.Locale), locale);
+            var pack = Kingmaker.Localization.LocalizationManager.LoadPack(target);
+            if (pack == null) return "NO PACK";
+            var classes = Game.Instance.BlueprintRoot.Progression.CharacterClasses.Take(4)
+                .Select(c => $"{c.Name}={c.LocalizedName.LoadString(pack, target)}");
+            return $"current={Kingmaker.Localization.LocalizationManager.CurrentLocale} " + string.Join(", ", classes);
+        }
     }
 }
