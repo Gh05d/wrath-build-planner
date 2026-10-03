@@ -1,0 +1,11 @@
+bin/
+obj/
+GameInstall
+GamePath.props
+deploy.sh
+*.user
+*.suo
+.vs/
+.codegraph/
+mono_crash.*.json
+.superpowers/
