@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="$(SolutionDir)GamePath.props" Condition="Exists('$(SolutionDir)GamePath.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>net481</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>WrathBuildPlanner.Tests</RootNamespace>
+    <AssemblyName>WrathBuildPlanner.Tests</AssemblyName>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WrathBuildPlanner\WrathBuildPlanner.csproj" />
+    <Reference Include="$(WrathInstallDir)\Wrath_Data\Managed\Newtonsoft.Json.dll" Private="false" />
+  </ItemGroup>
+
+  <!-- The mod marks game DLLs Private="false"; the test host has no game runtime, so copy them next to the tests. -->
+  <Target Name="CopyGameDllsToTestOutput" AfterTargets="Build">
+    <ItemGroup>
+      <_GameDllsBase Include="$(SolutionDir)GameInstall\Wrath_Data\Managed\*.dll" />
+      <_GameDllsUMM Include="$(SolutionDir)GameInstall\Wrath_Data\Managed\UnityModManager\*.dll" />
+      <_PublicizedDlls Include="$(SolutionDir)WrathBuildPlanner\obj\$(Configuration)\publicized\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_GameDllsBase)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_GameDllsUMM)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_PublicizedDlls)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="false" />
+  </Target>
+
+</Project>
