@@ -1,0 +1,552 @@
+using Kingmaker;
+using Kingmaker.Settings;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+using WrathBuildPlanner.Logging;
+
+namespace WrathBuildPlanner.UI {
+    static class UIHelpers {
+        public static Transform StaticRoot => Game.Instance.UI.Canvas.transform;
+        public static Transform ServiceWindow => StaticRoot.Find("ServiceWindowsPCView");
+
+        /// <summary>
+        /// Multiplier applied to every <c>fontSize</c> argument passed to <see cref="AddLabel"/>
+        /// and <see cref="CreateTMPInputField"/>. Mirrors the game's UI font scale slider
+        /// (<c>SettingsRoot.Game.Main.FontSize</c> — same source the Journal etc. multiplies
+        /// by). Refreshed on-open via <see cref="RefreshFontScale"/>; settings changes made
+        /// while the panel is open take effect on the next Ctrl+T cycle.
+        /// </summary>
+        public static float FontScale { get; private set; } = Theme.BaseScale;
+
+        public static void RefreshFontScale() {
+            try {
+                var fontSetting = SettingsRoot.Game?.Main?.FontSize;
+                if (fontSetting != null) {
+                    float v = (float)fontSetting;
+                    // Defensive clamp — game slider never produces these, but a corrupt
+                    // settings file shouldn't render the panel unreadable.
+                    if (float.IsNaN(v) || v < 0.5f || v > 3f) v = 1f;
+                    FontScale = v * Theme.BaseScale;
+                }
+            } catch (Exception ex) {
+                Log.UI.Warn($"FontScale read failed, using 1.0: {ex.Message}");
+                FontScale = Theme.BaseScale;
+            }
+        }
+
+        public static void SetAnchor(this RectTransform transform, double xMin, double xMax, double yMin, double yMax) {
+            transform.anchorMin = new Vector2((float)xMin, (float)yMin);
+            transform.anchorMax = new Vector2((float)xMax, (float)yMax);
+        }
+
+        public static RectTransform Rect(this GameObject obj) => obj.transform as RectTransform;
+        public static RectTransform Rect(this Transform obj) => obj as RectTransform;
+
+        public static void FillParent(this RectTransform rect) {
+            rect.SetAnchor(0, 1, 0, 1);
+            rect.sizeDelta = Vector2.zero;
+        }
+
+        public static void FillParent(this GameObject obj) => obj.Rect().FillParent();
+
+        public static (GameObject, RectTransform) Create(string name, Transform parent = null) {
+            var obj = new GameObject(name, typeof(RectTransform));
+            if (parent != null)
+                obj.AddTo(parent);
+            return (obj, obj.Rect());
+        }
+
+        public static void AddTo(this GameObject obj, Transform parent) {
+            obj.transform.SetParent(parent, false);
+            obj.transform.localPosition = Vector3.zero;
+            obj.transform.localScale = Vector3.one;
+            obj.transform.localRotation = Quaternion.identity;
+        }
+
+        public static Transform ChildTransform(this GameObject obj, string path) {
+            return obj.transform.Find(path);
+        }
+
+        public static GameObject ChildObject(this GameObject obj, string path) {
+            return obj.ChildTransform(path)?.gameObject;
+        }
+
+        public static T MakeComponent<T>(this GameObject obj, Action<T> build) where T : Component {
+            var component = obj.AddComponent<T>();
+            build(component);
+            return component;
+        }
+
+        public static TextMeshProUGUI AddLabel(GameObject parent, string text, float fontSize = 20f,
+            TextAlignmentOptions alignment = TextAlignmentOptions.MidlineLeft, Color? color = null) {
+            var (labelObj, labelRect) = Create("Label", parent.transform);
+            labelRect.FillParent();
+            var tmp = labelObj.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = fontSize * FontScale;
+            tmp.alignment = alignment;
+            tmp.color = color ?? Color.white;
+            tmp.enableWordWrapping = false;
+            tmp.overflowMode = TextOverflowModes.Ellipsis;
+            tmp.raycastTarget = false;
+            return tmp;
+        }
+
+        public static Image AddBackground(GameObject obj, Color color) {
+            var img = obj.AddComponent<Image>();
+            img.color = color;
+            img.raycastTarget = true;
+            return img;
+        }
+
+        /// <summary>
+        /// Creates a TMP_InputField with proper text viewport setup.
+        /// </summary>
+        public static TMP_InputField CreateTMPInputField(GameObject parent, string name,
+            double xMin, double xMax, string initialText, float fontSize = 16f,
+            TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard,
+            string placeholderText = null) {
+
+            var (obj, rect) = Create(name, parent.transform);
+            rect.SetAnchor(xMin, xMax, 0, 1);
+            rect.sizeDelta = Vector2.zero;
+            Widgets.AddInset(obj);
+
+            // Text viewport (clip area with small padding)
+            var (viewport, viewportRect) = Create("TextArea", obj.transform);
+            viewportRect.FillParent();
+            viewportRect.offsetMin = new Vector2(4, 0);
+            viewportRect.offsetMax = new Vector2(-4, 0);
+            viewport.AddComponent<RectMask2D>();
+
+            // Text component
+            var (textObj, textRect) = Create("Text", viewport.transform);
+            textRect.FillParent();
+            var textTmp = textObj.AddComponent<TextMeshProUGUI>();
+            textTmp.fontSize = fontSize * FontScale;
+            textTmp.alignment = TextAlignmentOptions.MidlineLeft;
+            textTmp.color = Theme.Ink;
+            textTmp.enableWordWrapping = false;
+            textTmp.overflowMode = TextOverflowModes.Ellipsis;
+
+            var inputField = obj.AddComponent<TMP_InputField>();
+            inputField.textViewport = viewportRect;
+            inputField.textComponent = textTmp;
+            inputField.text = initialText;
+            inputField.contentType = contentType;
+
+            // Optional placeholder — rendered by TMP_InputField when text is empty and
+            // the field is unfocused. Null/empty placeholderText skips this entirely so
+            // existing callers keep their no-placeholder behavior.
+            if (!string.IsNullOrEmpty(placeholderText)) {
+                var (phObj, phRect) = Create("Placeholder", viewport.transform);
+                phRect.FillParent();
+                var phTmp = phObj.AddComponent<TextMeshProUGUI>();
+                phTmp.fontSize = fontSize * FontScale;
+                phTmp.alignment = TextAlignmentOptions.MidlineLeft;
+                phTmp.color = Theme.InkMuted;
+                phTmp.fontStyle = FontStyles.Italic;
+                phTmp.enableWordWrapping = false;
+                phTmp.overflowMode = TextOverflowModes.Ellipsis;
+                phTmp.raycastTarget = false;  // don't intercept clicks meant for the input
+                phTmp.text = placeholderText;
+                inputField.placeholder = phTmp;
+            }
+
+            // Clicking into a field should place the cursor at the click point,
+            // not select-all. Select-all means backspace wipes the whole text.
+            inputField.onFocusSelectAll = false;
+
+            // Built-in TMP caret doesn't render reliably in our custom input fields
+            // (suspected font-material issue with the game's TMP setup). Attach a
+            // ManualInputCaret component that renders its own blinking Image caret
+            // at the real caret position.
+            var manual = obj.AddComponent<ManualInputCaret>();
+            manual.Init(inputField, textTmp, textRect);
+
+            // Set the background image as the target graphic for click detection
+            var bgImage = obj.GetComponent<Image>();
+            if (bgImage != null) inputField.targetGraphic = bgImage;
+
+            // Force the text component to update
+            textTmp.text = initialText;
+
+            return inputField;
+        }
+
+        /// <summary>Layout-group flavour of CreateTMPInputField: sized by LayoutElement, not anchors.</summary>
+        public static TMP_InputField CreateTMPInputFieldInRow(GameObject parent, string name,
+            float preferredWidth, float flexibleWidth, string initialText, float fontSize = 16f,
+            TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard,
+            string placeholderText = null) {
+            var field = CreateTMPInputField(parent, name, 0, 1, initialText, fontSize, contentType, placeholderText);
+            Widgets.InRow(field.gameObject, preferredWidth, flexibleWidth);
+            return field;
+        }
+
+        public static bool StringMatchesFilter(string name, string query) {
+            if (string.IsNullOrWhiteSpace(query)) return true;
+            return (name ?? "").IndexOf(query, System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+    }
+
+    /// <summary>
+    /// Renders a blinking "|" glyph (via TextMeshProUGUI) at the real
+    /// TMP_InputField caret position while the field is focused. Works around
+    /// Image-based caret rendering glitches seen when the caret GameObject is
+    /// parented under a TMP_Text GO (TMP's dynamic sub-mesh child management
+    /// appears to interfere). The caret is now parented to the viewport
+    /// (sibling of the text GO), and uses the text component's own FontAsset
+    /// so the "|" glyph is guaranteed to render with the same pipeline that
+    /// renders the user's typed text.
+    /// Position is derived from TMP_Text.textInfo.characterInfo[i].xAdvance,
+    /// so arrow keys / clicks / home/end all track correctly.
+    /// </summary>
+    public class ManualInputCaret : MonoBehaviour {
+        TMP_InputField field;
+        TextMeshProUGUI textComponent;
+        RectTransform textRect;
+        TextMeshProUGUI caretText;
+        RectTransform caretRect;
+        float blinkTimer;
+        bool caretShown = true;
+
+        public void Init(TMP_InputField field, TextMeshProUGUI text, RectTransform textRect) {
+            this.field = field;
+            this.textComponent = text;
+            this.textRect = textRect;
+        }
+
+        void Start() {
+            if (textRect == null || textComponent == null) return;
+
+            // Parent to the VIEWPORT (textRect.parent), not to the text GO itself —
+            // avoids TMP_Text's sub-mesh child management interfering with us.
+            var parent = textRect.parent as RectTransform;
+            if (parent == null) parent = textRect;
+
+            var caretObj = new GameObject("ManualCaret", typeof(RectTransform));
+            caretObj.transform.SetParent(parent, false);
+            caretRect = (RectTransform)caretObj.transform;
+            caretRect.anchorMin = new Vector2(0, 0);
+            caretRect.anchorMax = new Vector2(0, 1);
+            caretRect.pivot = new Vector2(0, 0.5f);
+            caretRect.sizeDelta = new Vector2(10, 0);
+            caretRect.anchoredPosition = Vector2.zero;
+
+            caretText = caretObj.AddComponent<TextMeshProUGUI>();
+            caretText.font = textComponent.font;
+            caretText.fontSize = textComponent.fontSize;
+            caretText.text = "|";
+            caretText.color = Theme.Ink;
+            caretText.alignment = TextAlignmentOptions.MidlineLeft;
+            caretText.enableWordWrapping = false;
+            caretText.raycastTarget = false;
+            caretText.overflowMode = TextOverflowModes.Overflow;
+        }
+
+        void Update() {
+            if (field == null || caretText == null || textComponent == null) return;
+            if (!field.isFocused) {
+                if (caretText.enabled) caretText.enabled = false;
+                return;
+            }
+
+            caretRect.anchoredPosition = new Vector2(GetCaretX() - 2f, 0);
+
+            blinkTimer += Time.unscaledDeltaTime;
+            if (blinkTimer >= 0.53f) {
+                blinkTimer = 0;
+                caretShown = !caretShown;
+            }
+            caretText.enabled = caretShown;
+        }
+
+        float GetCaretX() {
+            // TMP xAdvance is in mesh-local coords anchored at the text rect's
+            // CENTER (pivot 0.5). Our caretRect is anchored to the parent's LEFT
+            // edge, so we must add half the parent width to translate.
+            float leftEdgeOffset = 0f;
+            if (caretRect != null && caretRect.parent is RectTransform pr)
+                leftEdgeOffset = pr.rect.width * 0.5f;
+
+            int idx = field.caretPosition;
+            if (idx <= 0) return 0f;
+
+            textComponent.ForceMeshUpdate();
+            var info = textComponent.textInfo;
+            if (info == null || info.characterInfo == null) return 0f;
+
+            // Clamp to the last rendered character; textInfo.characterCount is the
+            // number of characters the mesh actually holds (0-based indices).
+            int lastIdx = System.Math.Min(idx, info.characterCount) - 1;
+            if (lastIdx < 0 || lastIdx >= info.characterInfo.Length) return 0f;
+
+            return info.characterInfo[lastIdx].xAdvance + leftEdgeOffset;
+        }
+    }
+
+    /// <summary>
+    /// Replaces all Dropdown usage. Shows a button with current selection text.
+    /// On click, creates a scrollable popup overlay on the main canvas.
+    /// </summary>
+    public class PopupSelector : MonoBehaviour {
+        List<string> options = new List<string>();
+        List<Sprite> icons; // parallel to options, may contain nulls
+        int selectedIndex;
+        Action<int> onSelected;
+        TextMeshProUGUI buttonLabel;
+        GameObject popupOverlay;
+
+        public int SelectedIndex => selectedIndex;
+        public string SelectedOption => selectedIndex >= 0 && selectedIndex < options.Count
+            ? options[selectedIndex] : "";
+
+        public static PopupSelector CreateWithIcons(GameObject parent, string name,
+            float xMin, float xMax, List<string> options, List<Sprite> icons,
+            int initialIndex, Action<int> onSelected) {
+
+            var obj = Widgets.BandDropdownShell(parent.transform, name, "", withIcon: false,
+                out var shellLabel, out _);
+            var rect = obj.Rect();
+            rect.SetAnchor(xMin, xMax, 0, 1);
+            rect.sizeDelta = Vector2.zero;
+
+            var selector = obj.AddComponent<PopupSelector>();
+            selector.options = options ?? new List<string>();
+            selector.icons = icons;
+            selector.selectedIndex = Mathf.Clamp(initialIndex, 0,
+                Mathf.Max(0, (options?.Count ?? 1) - 1));
+            selector.onSelected = onSelected;
+            selector.buttonLabel = shellLabel;
+            selector.UpdateLabel();
+
+            var btn = obj.AddComponent<Button>();
+            btn.targetGraphic = obj.GetComponent<Image>();
+            Widgets.ApplyColorTint(btn);
+            btn.onClick.AddListener(selector.TogglePopup);
+
+            return selector;
+        }
+
+        /// <summary>Layout-group flavour: flexibleWidth replaces the anchor span (pass the old xMax − xMin).</summary>
+        public static PopupSelector CreateInRow(GameObject parent, string name, float flexibleWidth,
+            List<string> options, int initialIndex, Action<int> onSelected) =>
+            CreateWithIconsInRow(parent, name, flexibleWidth, options, null, initialIndex, onSelected);
+
+        public static PopupSelector CreateWithIconsInRow(GameObject parent, string name, float flexibleWidth,
+            List<string> options, List<Sprite> icons, int initialIndex, Action<int> onSelected) {
+            var selector = CreateWithIcons(parent, name, 0f, 1f, options, icons, initialIndex, onSelected);
+            Widgets.InRow(selector.gameObject, 60f, flexibleWidth);
+            return selector;
+        }
+
+        public void SetOptions(List<string> newOptions, int newIndex, List<Sprite> newIcons = null) {
+            options = newOptions ?? new List<string>();
+            icons = newIcons;
+            selectedIndex = Mathf.Clamp(newIndex, 0, Mathf.Max(0, options.Count - 1));
+            UpdateLabel();
+            ClosePopup();
+        }
+
+        void UpdateLabel() {
+            if (buttonLabel == null) return;
+            buttonLabel.text = selectedIndex >= 0 && selectedIndex < options.Count
+                ? options[selectedIndex] : "";
+        }
+
+        void TogglePopup() {
+            if (popupOverlay != null) {
+                ClosePopup();
+            } else {
+                OpenPopup();
+            }
+        }
+
+        void OpenPopup() {
+            if (options.Count == 0) return;
+            popupOverlay = CreatePickerOverlay(options, icons, selectedIndex, idx => {
+                SelectOption(idx);
+            });
+            // Wire the overlay background click to ClosePopup so popupOverlay is nulled properly
+            popupOverlay.GetComponent<Button>().onClick.AddListener(ClosePopup);
+        }
+
+        /// <summary>
+        /// Creates a transient centered picker popup without a backing selector button.
+        /// The overlay is destroyed when the user picks an option or clicks outside.
+        /// </summary>
+        public static void ShowPicker(List<string> options, Action<int> onPick) {
+            GameObject overlay = null;
+            overlay = CreatePickerOverlay(options, null, -1, idx => {
+                onPick?.Invoke(idx);
+                if (overlay != null) UnityEngine.Object.Destroy(overlay);
+            });
+            var capturedOverlay = overlay;
+            overlay.GetComponent<Button>().onClick.AddListener(() => {
+                if (capturedOverlay != null) UnityEngine.Object.Destroy(capturedOverlay);
+            });
+            // Attach an Escape handler that destroys the overlay — instance PopupSelectors
+            // listen on their own Update, transient pickers need their own.
+            overlay.AddComponent<EscapeCloser>();
+        }
+
+        /// <summary>
+        /// Builds a full-screen overlay with a centered scrollable option list.
+        /// Returns the overlay GameObject. The overlay has a Button component on its root
+        /// with no listeners yet — callers must attach their own outside-click handler.
+        /// onOptionClicked fires with the chosen index when an option button is pressed;
+        /// the caller is responsible for closing/destroying the overlay.
+        /// </summary>
+        static GameObject CreatePickerOverlay(List<string> options, List<Sprite> icons,
+            int selectedIndex, Action<int> onOptionClicked) {
+
+            float itemHeight = Theme.PopupRowHeight;
+            float maxPopupHeight = Theme.PopupListMaxHeight;
+            float totalHeight = Mathf.Min(options.Count * itemHeight + Theme.PaperInset * 2f + 8f, maxPopupHeight);
+
+            // Paper sheet over a dim; callers attach their outside-click handler to the
+            // overlay's Button (parts.OverlayButton == overlay.GetComponent<Button>()).
+            var parts = Widgets.PaperPopup("PopupOverlay", Theme.PopupListWidth, totalHeight, null, null);
+            var overlay = parts.Overlay;
+            var popup = parts.Content;
+
+            // Scroll view
+            var (scrollObj, scrollRect) = UIHelpers.Create("Scroll", popup.transform);
+            scrollRect.FillParent();
+
+            var (viewport, viewportRect) = UIHelpers.Create("Viewport", scrollObj.transform);
+            viewportRect.FillParent();
+            viewport.AddComponent<RectMask2D>();
+
+            var (content, contentRect) = UIHelpers.Create("Content", viewport.transform);
+            contentRect.SetAnchor(0, 1, 1, 1);
+            contentRect.pivot = new Vector2(0.5f, 1f);
+            contentRect.sizeDelta = new Vector2(0, 0);
+
+            var vlg = content.AddComponent<VerticalLayoutGroup>();
+            vlg.spacing = 1;
+            vlg.childForceExpandWidth = true;
+            vlg.childForceExpandHeight = false;
+            vlg.childControlHeight = true;
+            vlg.childControlWidth = true;
+            vlg.padding = new RectOffset(2, 2, 2, 2);
+
+            var csf = content.AddComponent<ContentSizeFitter>();
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var scroll = scrollObj.AddComponent<ScrollRect>();
+            scroll.viewport = viewportRect;
+            scroll.content = contentRect;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.scrollSensitivity = 30f;
+
+            // Visible vertical scrollbar — 12px wide, anchored to popup's right edge.
+            // AutoHideAndExpandViewport leaves short popups uncluttered (bar hidden +
+            // viewport reclaims the 12px) and only shows the bar when content overflows.
+            float sbWidth = Theme.ScrollbarWidth;
+            var (sbObj, sbRect) = UIHelpers.Create("Scrollbar", scrollObj.transform);
+            sbRect.anchorMin = new Vector2(1, 0);
+            sbRect.anchorMax = new Vector2(1, 1);
+            sbRect.pivot = new Vector2(1, 0.5f);
+            sbRect.sizeDelta = new Vector2(sbWidth, 0);
+            sbRect.anchoredPosition = Vector2.zero;
+            UIHelpers.AddBackground(sbObj, Theme.InkFrame);
+
+            var (slidingArea, slidingRect) = UIHelpers.Create("SlidingArea", sbObj.transform);
+            slidingRect.anchorMin = new Vector2(0, 0);
+            slidingRect.anchorMax = new Vector2(1, 1);
+            slidingRect.sizeDelta = new Vector2(-4, -4);
+            slidingRect.anchoredPosition = Vector2.zero;
+
+            var (handleObj, handleRect) = UIHelpers.Create("Handle", slidingArea.transform);
+            handleRect.anchorMin = new Vector2(0, 0);
+            handleRect.anchorMax = new Vector2(1, 1);
+            handleRect.sizeDelta = Vector2.zero;
+            var handleImg = handleObj.AddComponent<Image>();
+            handleImg.color = Theme.InkMuted;
+            handleImg.raycastTarget = true;
+
+            var sb = sbObj.AddComponent<Scrollbar>();
+            sb.direction = Scrollbar.Direction.BottomToTop;
+            sb.handleRect = handleRect;
+            sb.targetGraphic = handleImg;
+
+            scroll.verticalScrollbar = sb;
+            scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+            scroll.verticalScrollbarSpacing = 0f;
+
+            // Option buttons
+            for (int i = 0; i < options.Count; i++) {
+                var capturedIndex = i;
+                bool selected = i == selectedIndex;
+                var itemObj = Widgets.ListRow(content.transform, $"Option_{i}", itemHeight, selected);
+                var label = Widgets.InkLabel(itemObj, options[i], 15f, TextAlignmentOptions.MidlineLeft,
+                    Widgets.ListRowTextColor(selected));
+
+                if (icons != null && i < icons.Count && icons[i] != null) {
+                    var (iconObj, iconRect) = UIHelpers.Create("Icon", itemObj.transform);
+                    iconRect.anchorMin = new Vector2(0, 0.5f);
+                    iconRect.anchorMax = new Vector2(0, 0.5f);
+                    iconRect.pivot = new Vector2(0, 0.5f);
+                    iconRect.anchoredPosition = new Vector2(4, 0);
+                    iconRect.sizeDelta = new Vector2(30, 30);
+                    var iconImg = iconObj.AddComponent<Image>();
+                    iconImg.sprite = icons[i];
+                    iconImg.preserveAspect = true;
+                    iconImg.raycastTarget = false;
+                    label.margin = new Vector4(38, 0, 4, 0);
+                } else {
+                    label.margin = new Vector4(4, 0, 4, 0);
+                }
+
+                var itemBtn = itemObj.AddComponent<Button>();
+                itemBtn.targetGraphic = itemObj.GetComponent<Image>();
+                Widgets.ApplyColorTint(itemBtn);
+                itemBtn.onClick.AddListener(() => {
+                    onOptionClicked?.Invoke(capturedIndex);
+                });
+            }
+
+            return overlay;
+        }
+
+        void SelectOption(int index) {
+            selectedIndex = index;
+            UpdateLabel();
+            ClosePopup();
+            onSelected?.Invoke(index);
+        }
+
+        void ClosePopup() {
+            if (popupOverlay != null) {
+                Destroy(popupOverlay);
+                popupOverlay = null;
+            }
+        }
+
+        void Update() {
+            // Close popup on Escape
+            if (popupOverlay != null && Input.GetKeyDown(KeyCode.Escape)) {
+                ClosePopup();
+            }
+        }
+
+        void OnDestroy() {
+            ClosePopup();
+        }
+    }
+
+    /// <summary>Attached to transient ShowPicker overlays so Escape destroys them.</summary>
+    class EscapeCloser : MonoBehaviour {
+        void Update() {
+            if (Input.GetKeyDown(KeyCode.Escape))
+                Destroy(gameObject);
+        }
+    }
+}

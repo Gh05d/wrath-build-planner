@@ -16,8 +16,12 @@ namespace WrathBuildPlanner {
             modEntry.OnUnload = OnUnload;
 
             Logging.DebugLog.Init(modEntry.Path);
+            Localization.Strings.Initialise();
             harmony = new Harmony(modEntry.Info.Id);
             harmony.PatchAll();
+
+            UI.AssetLoader.Init();
+            UI.ThemeProvider.Init();
 
             Library = new Persistence.BuildLibrary(System.IO.Path.Combine(ModPath, "Builds"), Engine.GameNames.Known);
             EventBus.Subscribe(areaWatcher = new AreaWatcher());
