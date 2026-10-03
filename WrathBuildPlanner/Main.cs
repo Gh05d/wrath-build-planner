@@ -1,4 +1,5 @@
 using HarmonyLib;
+using Kingmaker.PubSubSystem;
 using UnityModManagerNet;
 
 namespace WrathBuildPlanner {
@@ -6,6 +7,8 @@ namespace WrathBuildPlanner {
         static Harmony harmony;
         public static UnityModManager.ModEntry ModEntry;
         public static string ModPath;
+        public static Persistence.BuildLibrary Library;
+        static AreaWatcher areaWatcher;
 
         static bool Load(UnityModManager.ModEntry modEntry) {
             ModEntry = modEntry;
@@ -16,17 +19,29 @@ namespace WrathBuildPlanner {
             harmony = new Harmony(modEntry.Info.Id);
             harmony.PatchAll();
 
+            Library = new Persistence.BuildLibrary(System.IO.Path.Combine(ModPath, "Builds"), Engine.GameNames.Known);
+            EventBus.Subscribe(areaWatcher = new AreaWatcher());
+
             modEntry.Logger.Log("Wrath Build Planner loaded.");
             return true;
         }
 
         static bool OnUnload(UnityModManager.ModEntry modEntry) {
             try {
+                if (areaWatcher != null) EventBus.Unsubscribe(areaWatcher);
                 harmony.UnpatchAll(modEntry.Info.Id);
             } finally {
                 Logging.DebugLog.Shutdown();
             }
             return true;
+        }
+
+        class AreaWatcher : IAreaHandler {
+            public void OnAreaDidLoad() {
+                Persistence.AssignmentStore.OnAreaLoaded();
+            }
+
+            public void OnAreaBeginUnloading() { }
         }
     }
 }
