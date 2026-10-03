@@ -23,6 +23,14 @@ namespace WrathBuildPlanner.Engine {
             }
         }
 
+        // Close() is the cancel path (m_CloseAction); Complete() is the other one and must keep the pending choice.
+        [HarmonyPatch(typeof(CharGenVM), nameof(CharGenVM.Close))]
+        static class Cancelled {
+            static void Postfix() {
+                Persistence.AssignmentStore.ClearPending();
+            }
+        }
+
         [HarmonyPatch(typeof(CharGenVM), "DisposeImplementation")]
         static class Closed {
             static void Postfix(CharGenVM __instance) {

@@ -17,10 +17,10 @@
         { "in": "Feat", "pick": "Toughness" },
         { "in": "Bonus Combat Feat", "pick": ["Weapon Focus", "Greatsword"] },
         { "in": "Background Selection", "pick": ["Warrior", "Gladiator"] },
-        { "in": "Deity", "pick": "Gorum" }
+        { "in": "Deity", "pick": "Iomedae" }
       ] },
     { "level": 2, "class": "Fighter", "picks": [ { "in": "Bonus Combat Feat", "pick": "Cleave" } ] },
-    { "level": 3, "class": "Fighter", "picks": [ { "in": "Feat", "pick": "Outflank" } ] },
+    { "level": 3, "class": "Fighter", "picks": [ { "in": "Feat", "pick": "Dodge" } ] },
     { "level": 4, "class": "Fighter", "abilityPoint": "Strength",
       "picks": [ { "in": "Bonus Combat Feat", "pick": ["Weapon Specialization", "Greatsword"] } ] },
     { "level": 5, "class": "Fighter", "picks": [ { "in": "Feat", "pick": "Improved Initiative" } ] }

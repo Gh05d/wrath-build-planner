@@ -21,6 +21,16 @@ expect() {
   if grep -qF -- "$2" <<<"$1"; then echo "PASS $3"; else echo "FAIL $3 — missing: $2"; echo "     got: $1"; FAILED=1; fi
 }
 
+# expect_not <text> <needle> <what> — the needle must NOT occur.
+expect_not() {
+  if grep -qF -- "$2" <<<"$1"; then echo "FAIL $3 — unexpected: $2"; echo "     got: $1"; FAILED=1; else echo "PASS $3"; fi
+}
+
+# expect_eq <actual> <expected> <what> — exact comparison.
+expect_eq() {
+  if [ "$1" = "$2" ]; then echo "PASS $3"; else echo "FAIL $3 — expected '$2', got '$1'"; FAILED=1; fi
+}
+
 # finish <shot name> — page forward until Complete shows, screenshot the summary, press Complete.
 finish() {
   local i out

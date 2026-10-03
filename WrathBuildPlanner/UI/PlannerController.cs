@@ -3,6 +3,7 @@ using System.Linq;
 using Kingmaker;
 using Kingmaker.UI.MVVM._PCView.CharGen;
 using Kingmaker.UI.MVVM._VM.CharGen;
+using Kingmaker.UnitLogic.Class.LevelUp;
 using UnityEngine;
 using UnityEngine.UI;
 using WrathBuildPlanner.Engine;
@@ -18,7 +19,10 @@ namespace WrathBuildPlanner.UI {
 
         BuildBar bar;
         CharGenVM barWindow;
-        bool libraryLoaded;
+        CharGenVM searchWindow;
+        int searchFrames;
+        const int SearchEveryFrames = 5;
+        const int MaxSearchFrames = 600;
         GameObject hudButton;
         int jumpInFrames;
 
@@ -59,26 +63,44 @@ namespace WrathBuildPlanner.UI {
         void SyncBar() {
             var window = WindowTracker.Window;
             if (window == null) {
-                if (bar != null) {
-                    bar.Destroy();
-                    bar = null;
-                    barWindow = null;
-                }
+                bar?.Destroy();
+                bar = null;
+                barWindow = null;
+                searchWindow = null;
                 return;
             }
-            if (bar != null && barWindow == window) return;
+            if (barWindow == window) return;
 
+            // Respec is its own window mode and unverified: no bar there (spec: hidden if it does not hold).
+            if (window.m_LevelUpController?.State?.Mode == LevelUpState.CharBuildMode.Respec) {
+                barWindow = window;
+                return;
+            }
+
+            // The view binds a few frames after the view model. In the gamepad UI it never appears,
+            // so the (expensive) search stops after a while instead of running for the whole level-up.
+            if (searchWindow != window) {
+                searchWindow = window;
+                searchFrames = 0;
+            }
+            if (searchFrames > MaxSearchFrames || ++searchFrames % SearchEveryFrames != 1) return;
             var view = UiRoot.OpenWindowView();
             if (view == null) return;
-            if (!libraryLoaded) {
-                Main.Library.Reload();
-                libraryLoaded = true;
-            }
-            bar?.Destroy();
-            bar = BuildBar.Create(view);
+
             barWindow = window;
-            bar.ChangeRequested += OnChangeRequested;
-            Log.UI.Info("build bar created");
+            bar?.Destroy();
+            bar = null;
+            // Files may have been edited or removed since the last window: read the folder each time.
+            Main.Library.Reload();
+            try {
+                bar = BuildBar.Create(view);
+                bar.ChangeRequested += OnChangeRequested;
+                Log.UI.Info("build bar created");
+            } catch (Exception e) {
+                // No retry for this window: a retry per frame would pile up half-built bars.
+                Log.UI.Error(e, "build bar could not be created");
+                BuildBar.DestroyLeftovers(view);
+            }
         }
 
         void OnChangeRequested() {

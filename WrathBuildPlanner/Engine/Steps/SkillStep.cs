@@ -9,6 +9,7 @@ namespace WrathBuildPlanner.Engine.Steps {
     /// caps a skill's rank at the character level, so a pass never over-spends. Without a list, skills stay open.
     /// </summary>
     public class SkillStep : IApplyStep {
+        const int MaxPasses = 40;
         public string Name => "Skills";
 
         public void Run(ApplyContext context) {
@@ -22,7 +23,8 @@ namespace WrathBuildPlanner.Engine.Steps {
 
             int spent = 0;
             bool progress = true;
-            while (progress && context.State.SkillPointsRemaining > 0) {
+            // SpendSkillPoint returning true always costs a point, so this ends; the cap is a seat belt.
+            for (int pass = 0; pass < MaxPasses && progress && context.State.SkillPointsRemaining > 0; pass++) {
                 progress = false;
                 foreach (var skill in order) {
                     if (context.State.SkillPointsRemaining <= 0) break;
@@ -33,9 +35,9 @@ namespace WrathBuildPlanner.Engine.Steps {
             }
 
             int left = context.State.SkillPointsRemaining;
-            string label = $"Skills: {spent} point(s) spent";
+            string label = Messages.Get("step.skills", spent);
             if (left == 0) context.Report.Steps.Add(StepResult.Applied(label));
-            else context.Report.Steps.Add(StepResult.Open(label, OpenReason.LeftToPlayer, $"{left} point(s) left"));
+            else context.Report.Steps.Add(StepResult.Open(label, OpenReason.LeftToPlayer, Messages.Get("step.skills_left", left)));
         }
     }
 }

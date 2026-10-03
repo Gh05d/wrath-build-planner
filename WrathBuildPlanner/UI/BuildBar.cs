@@ -46,7 +46,7 @@ namespace WrathBuildPlanner.UI {
 
         public static BuildBar Create(CharGenPCView view) {
             var bar = new BuildBar();
-            var (root, rect) = UIHelpers.Create("WrathBuildPlannerBar", view.transform);
+            var (root, rect) = UIHelpers.Create(BarName, view.transform);
             bar.root = root;
             rect.anchorMin = new Vector2(0f, 0f);
             rect.anchorMax = new Vector2(0f, 0f);
@@ -80,7 +80,7 @@ namespace WrathBuildPlanner.UI {
         }
 
         void BuildDetails(Transform parent) {
-            var (box, rect) = UIHelpers.Create("WrathBuildPlannerDetails", parent);
+            var (box, rect) = UIHelpers.Create(DetailsName, parent);
             details = box;
             // Bottom right, over the character model / progression chart: the left side holds the lists
             // the player needs to see while checking the picks.
@@ -134,6 +134,17 @@ namespace WrathBuildPlanner.UI {
             details.Rect().sizeDelta = new Vector2(DetailsWidth, Mathf.Clamp(wanted, DetailsMinHeight, DetailsHeight));
         }
 
+        const string BarName = "WrathBuildPlannerBar";
+        const string DetailsName = "WrathBuildPlannerDetails";
+
+        /// <summary>Removes bar objects a failed Create left behind under the view.</summary>
+        public static void DestroyLeftovers(CharGenPCView view) {
+            foreach (string name in new[] { BarName, DetailsName }) {
+                var leftover = view.transform.Find(name);
+                if (leftover != null) UnityEngine.Object.Destroy(leftover.gameObject);
+            }
+        }
+
         public void Destroy() {
             if (root != null) UnityEngine.Object.Destroy(root);
             if (details != null) UnityEngine.Object.Destroy(details);
@@ -147,8 +158,15 @@ namespace WrathBuildPlanner.UI {
             if (details.activeSelf) details.transform.SetAsLastSibling();
         }
 
+        string shownFile;
+
         LibraryEntry Assigned(out string fileName) {
             fileName = AssignmentStore.Get(WindowTracker.Controller?.Unit);
+            // Another build was assigned: the old result no longer describes anything.
+            if (fileName != shownFile) {
+                shownFile = fileName;
+                LastReport = null;
+            }
             return Main.Library.Find(fileName);
         }
 
@@ -192,6 +210,8 @@ namespace WrathBuildPlanner.UI {
         }
 
         public void Apply() {
+            // The usual loop is "fix the file, press Apply again": always work from what is on disk now.
+            Main.Library.Reload();
             var entry = Assigned(out _);
             if (entry == null || !entry.Ok) {
                 Refresh();
@@ -204,11 +224,12 @@ namespace WrathBuildPlanner.UI {
                 details.SetActive(true);
                 details.transform.SetAsLastSibling();
             }
-            PlannerController.Instance?.JumpToFirstOpenPage();
+            // No row or no window means nothing was changed — that includes the page shown.
+            if (!LastReport.NoRow && !LastReport.NoWindow) PlannerController.Instance?.JumpToFirstOpenPage();
         }
 
         public static string Render(ApplyReport report) {
-            if (report.NoWindow) return "";
+            if (report.NoWindow) return "bar.no_window".i18n();
             if (report.NoRow) return Strings.Format(report.Mythic ? "bar.no_row_mythic" : "bar.no_row", report.Level);
             var lines = new List<string>();
             if (report.History != null && report.History.Comparable && !report.History.Matches)

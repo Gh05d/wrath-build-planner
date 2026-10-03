@@ -50,12 +50,24 @@ namespace WrathBuildPlanner.Engine {
             Logging.Log.Engine.Info($"apply '{build.Name}' mode={mode} level={report.Level} row={(report.NoRow ? "none" : "found")}");
             if (report.NoRow) return report;
 
-            report.History = History(context);
+            try {
+                report.History = History(context);
+            } catch (Exception e) {
+                Logging.Log.Engine.Error(e, "history check failed");
+                report.History = new HistoryCheck();
+            }
 
             var spells = new SpellStep(context);
+            bool classFailed = false;
             foreach (var step in StepsFor(mode, spells)) {
+                if (classFailed && (step is SkillStep || step is PickStep)) continue;
                 try {
                     step.Run(context);
+                    // Skills, picks and spells belong to the class; applying them to another one helps nobody.
+                    if (step is ClassStep && report.Steps.Any(r => r.Status == StepStatus.Open && r.Label == Messages.Get("step.class", context.Row.Class))) {
+                        classFailed = true;
+                        report.Steps.Add(StepResult.Open(Messages.Get("step.rest_skipped"), OpenReason.LeftToPlayer));
+                    }
                 } catch (Exception e) {
                     Logging.Log.Engine.Error(e, $"step {step.Name} failed");
                     report.Steps.Add(StepResult.Open(step.Name, OpenReason.InternalError, e.Message));
@@ -63,7 +75,7 @@ namespace WrathBuildPlanner.Engine {
             }
 
             try {
-                spells.Report(context);
+                if (!classFailed) spells.Report(context);
             } catch (Exception e) {
                 Logging.Log.Engine.Error(e, "spell report failed");
             }

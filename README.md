@@ -40,8 +40,17 @@ The game's category prefixes can be left out ("Evocation" for "Specialist School
 | not selectable | The option exists but the game does not allow it now (prerequisites are shown). |
 | this level has no such selection | The page named by `"in"` does not exist on this level. |
 | no free spell slot | More spells listed than the level grants. |
+| left to you | The mod does not decide this for you, e.g. a mythic path the game does not offer yet, or skill points without a skill list. |
+| internal error | Something went wrong inside the mod for this entry; the rest was still applied. The mod's log has the details. |
 
 ## Good to know
+
+- Class, race, starting ability scores and alignment are always set from the build, even if you had
+  chosen something else. Everything else is only filled where nothing is chosen yet.
+- Write names in English or in your game's language; English names also work when the game runs in
+  another language. Exception: choices inside a feat (the weapon for Weapon Focus) are only known by
+  the name your game shows.
+- Using AutoLevelUp as well? Give a companion a build in one of the two mods, not in both.
 
 - If you pick or change a feat by hand after applying, the game resets that level's spell choices.
   Press **Apply build** again and they are set again.

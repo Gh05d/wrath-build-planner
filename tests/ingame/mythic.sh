@@ -21,4 +21,14 @@ bridge 'invoke WrathBuildPlanner.Engine.TestHooks.FillRest' >/dev/null
 finish m2 || exit 1
 expect "$(bridge "get $MC.Progression.MythicLevel" | tail -1)" '2' 'mythic rank 2 committed'
 
+echo "--- rank 3: a path the game does not offer is left to the player"
+bridge "invoke $MC.Progression.GainMythicExperience 1" 'wait 2' 'clickpath PartyCharacterView_01/Buttons/Mythic' 'wait 4' >/dev/null
+out=$(apply path-lich.json)
+echo "$out"
+expect "$out" 'Open Mythic path: Lich (LeftToPlayer' 'locked path is not selected'
+expect_eq "$(bridge 'get WrathBuildPlanner.Engine.WindowTracker.Controller.State.SelectedClass' | tail -1)" 'null' 'no mythic class selected after a locked path'
+out=$(apply path-angel.json)
+echo "$out"
+expect "$out" 'Applied Mythic path: Angel' 'offered path is selected'
+
 exit $FAILED

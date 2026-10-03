@@ -58,6 +58,14 @@ namespace WrathBuildPlanner.Persistence {
             pendingForNewGame = null;
         }
 
+        /// <summary>
+        /// The creation window was closed without completing (CharGenVM.Close). Without this, a build chosen
+        /// in a cancelled creation would be bound to the main character of whatever save is loaded next.
+        /// </summary>
+        public static void ClearPending() {
+            pendingForNewGame = null;
+        }
+
         public static void Reset() {
             current = null;
             loadedForGame = null;
@@ -74,7 +82,7 @@ namespace WrathBuildPlanner.Persistence {
                 current = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(path)) ?? new Dictionary<string, string>();
             } catch (JsonException e) {
                 Log.Persistence.Error(e, "assignments file is not valid JSON; starting empty (file kept)");
-            } catch (IOException e) {
+            } catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) {
                 Log.Persistence.Error(e, "assignments file could not be read; starting empty");
             }
         }
@@ -83,7 +91,7 @@ namespace WrathBuildPlanner.Persistence {
             try {
                 Directory.CreateDirectory(Dir);
                 File.WriteAllText(PathFor(GameId), JsonConvert.SerializeObject(current, Formatting.Indented));
-            } catch (IOException e) {
+            } catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) {
                 Log.Persistence.Error(e, "assignments could not be saved");
             }
         }

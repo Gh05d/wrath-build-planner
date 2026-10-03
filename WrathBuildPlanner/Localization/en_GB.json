@@ -37,5 +37,6 @@
   "window.clipboard_empty": "The clipboard is empty.",
   "settings.hotkey": "Hotkey for the Builds window (Ctrl + key)",
   "settings.language": "Language",
-  "settings.verbose": "Verbose log"
+  "settings.verbose": "Verbose log",
+  "bar.no_window": "No level-up window is open."
 }

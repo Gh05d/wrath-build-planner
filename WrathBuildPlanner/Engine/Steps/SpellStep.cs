@@ -34,7 +34,7 @@ namespace WrathBuildPlanner.Engine.Steps {
         /// <summary>Learns at most one spell. Returns true if it did.</summary>
         public bool Pass(ApplyContext context) {
             foreach (string name in wanted) {
-                string label = "Spell: " + name;
+                string label = Messages.Get("step.spell", name);
                 if (IsPickedNow(context, name)) continue;
 
                 var slots = OpenSlots(context);
@@ -55,7 +55,7 @@ namespace WrathBuildPlanner.Engine.Steps {
                     var chosen = (BlueprintAbility)outcome.Match.Tag;
                     int spellLevel = allowed[chosen];
                     if (slot.Book != null && slot.Data.SpellbookContainsSpell(slot.Book, spellLevel, chosen)) {
-                        failure = StepResult.Open(label, OpenReason.NotSelectable, "already known");
+                        failure = StepResult.Open(label, OpenReason.NotSelectable, Messages.Get("step.known"));
                         continue;
                     }
                     if (context.Controller.SelectSpell(slot.Data.Spellbook, slot.Data.SpellList, spellLevel, chosen, slot.Index)) {
@@ -73,7 +73,7 @@ namespace WrathBuildPlanner.Engine.Steps {
         /// <summary>Reports from the state as it is at the end, not from what was selected along the way.</summary>
         public void Report(ApplyContext context) {
             foreach (string name in wanted) {
-                string label = "Spell: " + name;
+                string label = Messages.Get("step.spell", name);
                 if (IsPickedNow(context, name)) {
                     context.Report.Steps.Add(selectedByThisRun.Contains(name) ? StepResult.Applied(label) : StepResult.Already(label));
                 } else {

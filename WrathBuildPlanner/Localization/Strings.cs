@@ -25,6 +25,7 @@ namespace WrathBuildPlanner.Localization {
             Add(Locale.frFR, "fr_FR.json");
             Add(Locale.ruRU, "ru_RU.json");
             Add(Locale.zhCN, "zh_CN.json");
+            Core.Messages.Translate = key => Packs.TryGetValue(Current, out var pack) && pack.TryGetValue("msg." + key, out string value) ? value : null;
         }
 
         // The settings override wins; "auto" follows the game. LocalizationManager.CurrentLocale throws

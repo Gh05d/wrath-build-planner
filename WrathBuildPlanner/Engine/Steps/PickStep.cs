@@ -34,7 +34,13 @@ namespace WrathBuildPlanner.Engine.Steps {
 
         public void Run(ApplyContext context) {
             var pending = Picks(context).Select(e => new Pending { Entry = e, Chain = new List<string>(e.Pick) }).ToList();
-            foreach (var pick in pending) Resume(context, pick);
+            foreach (var pick in pending) {
+                try {
+                    Resume(context, pick);
+                } catch (Exception e) {
+                    Logging.Log.Engine.Error(e, $"pick '{pick.Entry.Label}': resume check failed");
+                }
+            }
 
             // Picks to a fixed point, then spells to a fixed point, and again while spells still change something.
             // Order matters: the game can drop spell picks when a feature is selected after them, and the spell
@@ -45,7 +51,7 @@ namespace WrathBuildPlanner.Engine.Steps {
                     picked = false;
                     foreach (var pick in pending.Where(p => !p.Done)) {
                         var before = SpellStep.PickedNow(context);
-                        if (!TryAdvance(context, pick)) continue;
+                        if (!Guarded(context, pick)) continue;
                         picked = true;
                         var lost = before.Except(SpellStep.PickedNow(context)).ToList();
                         if (lost.Count > 0)
@@ -53,7 +59,12 @@ namespace WrathBuildPlanner.Engine.Steps {
                     }
                 }
                 bool spells = false;
-                for (int round = 0; interleave != null && round < MaxPasses && interleave(context); round++) spells = true;
+                try {
+                    for (int round = 0; interleave != null && round < MaxPasses && interleave(context); round++) spells = true;
+                } catch (Exception e) {
+                    // The spell step reports per spell from the live state; a throw here must not hide the picks.
+                    Logging.Log.Engine.Error(e, "spell pass failed");
+                }
                 if (!spells) break;
             }
 
@@ -61,6 +72,18 @@ namespace WrathBuildPlanner.Engine.Steps {
                 if (pick.WasAlreadySet) context.Report.Steps.Add(StepResult.Already(pick.Entry.Label));
                 else if (pick.Done) context.Report.Steps.Add(StepResult.Applied(pick.Entry.Label));
                 else context.Report.Steps.Add(pick.Failure ?? StepResult.Open(pick.Entry.Label, OpenReason.SelectionMissing));
+            }
+        }
+
+        // One pick failing (a modded selection that throws, a prerequisite text that throws) is recorded on
+        // that pick; the others still run and are still reported.
+        bool Guarded(ApplyContext context, Pending pick) {
+            try {
+                return TryAdvance(context, pick);
+            } catch (Exception e) {
+                Logging.Log.Engine.Error(e, $"pick '{pick.Entry.Label}' failed");
+                pick.Failure = StepResult.Open(pick.Entry.Label, OpenReason.InternalError, e.Message);
+                return false;
             }
         }
 
@@ -126,7 +149,7 @@ namespace WrathBuildPlanner.Engine.Steps {
                 // The child selection of a picked item is the open selection whose Selection is that feature.
                 targets = open.Where(s => ReferenceEquals(s.Selection, pick.Parent.Feature)).ToList();
                 if (targets.Count == 0) {
-                    pick.Failure = StepResult.Open(label, OpenReason.SelectionMissing, $"'{pick.Chain[pick.Position - 1]}' offers no further choice");
+                    pick.Failure = StepResult.Open(label, OpenReason.SelectionMissing, Messages.Get("step.no_further", pick.Chain[pick.Position - 1]));
                     return false;
                 }
             } else if (pick.Entry.In != null) {
@@ -135,10 +158,16 @@ namespace WrathBuildPlanner.Engine.Steps {
                     pick.Failure = StepResult.Open(label, OpenReason.SelectionMissing, null, outcome.Suggestions);
                     return false;
                 }
-                // Several open selections with the same name (two "Feat" slots) are tried in order.
+                // Several open slots of the same selection (two "Feat" slots) are tried in order.
+                // Different selections sharing the name are an ambiguity, not something to guess.
                 targets = outcome.Kind == MatchKind.Unique
                     ? new List<FeatureSelectionState> { (FeatureSelectionState)outcome.Match.Tag }
                     : outcome.Tied.Select(t => (FeatureSelectionState)t.Tag).ToList();
+                if (targets.Select(t => t.Selection).Distinct().Count() > 1) {
+                    pick.Failure = StepResult.Open(label, OpenReason.Ambiguous,
+                        string.Join(", ", targets.Select(t => (t.Selection as Kingmaker.Blueprints.SimpleBlueprint)?.name ?? "?").Distinct()));
+                    return false;
+                }
             } else {
                 targets = open;
             }

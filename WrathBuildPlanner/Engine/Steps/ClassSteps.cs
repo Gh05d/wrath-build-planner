@@ -15,7 +15,7 @@ namespace WrathBuildPlanner.Engine.Steps {
         public void Run(ApplyContext context) {
             string wanted = context.Row.Class;
             if (string.IsNullOrWhiteSpace(wanted)) return;
-            string label = "Class: " + wanted;
+            string label = Messages.Get("step.class", wanted);
 
             var outcome = NameMatcher.Match(wanted, GameNames.Classes());
             if (outcome.Kind != MatchKind.Unique) {
@@ -30,7 +30,7 @@ namespace WrathBuildPlanner.Engine.Steps {
             }
             context.Controller.SelectClass(cls, true, false);
             if (context.State.SelectedClass == cls) context.Report.Steps.Add(StepResult.Applied(label));
-            else context.Report.Steps.Add(StepResult.Open(label, OpenReason.NotSelectable, "the game does not allow this class now"));
+            else context.Report.Steps.Add(StepResult.Open(label, OpenReason.NotSelectable, Messages.Get("step.class_denied")));
         }
     }
 
@@ -41,10 +41,10 @@ namespace WrathBuildPlanner.Engine.Steps {
         public void Run(ApplyContext context) {
             string wanted = context.Row.Archetype;
             if (string.IsNullOrWhiteSpace(wanted)) return;
-            string label = "Archetype: " + wanted;
+            string label = Messages.Get("step.archetype", wanted);
             var cls = context.State.SelectedClass;
             if (cls == null) {
-                context.Report.Steps.Add(StepResult.Open(label, OpenReason.SelectionMissing, "no class selected"));
+                context.Report.Steps.Add(StepResult.Open(label, OpenReason.SelectionMissing, Messages.Get("step.no_class")));
                 return;
             }
 
@@ -61,7 +61,7 @@ namespace WrathBuildPlanner.Engine.Steps {
                 return;
             }
             if (context.Controller.AddArchetype(archetype)) context.Report.Steps.Add(StepResult.Applied(label));
-            else context.Report.Steps.Add(StepResult.Open(label, OpenReason.NotSelectable, "only possible on the first level of the class"));
+            else context.Report.Steps.Add(StepResult.Open(label, OpenReason.NotSelectable, Messages.Get("step.archetype_first")));
         }
     }
 
@@ -72,8 +72,11 @@ namespace WrathBuildPlanner.Engine.Steps {
         public void Run(ApplyContext context) {
             string wanted = context.Row.AbilityPoint;
             if (string.IsNullOrWhiteSpace(wanted) || context.State.AttributePoints <= 0) return;
-            string label = "Attribute point: " + wanted;
-            Vocabulary.TryAttribute(wanted, out string canonical);
+            string label = Messages.Get("step.point", wanted);
+            if (!Vocabulary.TryAttribute(wanted, out string canonical)) {
+                context.Report.Steps.Add(StepResult.Open(label, OpenReason.NotFound));
+                return;
+            }
             var stat = (StatType)Enum.Parse(typeof(StatType), canonical);
             if (context.Controller.SpendAttributePoint(stat)) context.Report.Steps.Add(StepResult.Applied(label));
             else context.Report.Steps.Add(StepResult.Open(label, OpenReason.NotSelectable));

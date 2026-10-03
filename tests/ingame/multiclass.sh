@@ -37,6 +37,7 @@ out=$(apply multiclass.json)
 echo "$out"
 expect "$out" 'AlreadySet Weapon Focus (Longsword)' 'second apply reports earlier picks as set'
 expect "$out" 'Spell: Mage Armor' 'spells present after a later feature pick'
+expect_not "$out" 'Open Spell' 'no spell left open'
 finish l3 || exit 1
 d=$(describe)
 expect "$d" 'SorcererClass 1 (SageSorcererArchetype)' 'Sorcerer with archetype committed'

@@ -25,7 +25,7 @@ namespace WrathBuildPlanner.Persistence {
                     current = JsonConvert.DeserializeObject<ModSettingsData>(File.ReadAllText(FilePath)) ?? new ModSettingsData();
                 } catch (JsonException e) {
                     Log.Persistence.Error(e, "settings.json is not valid JSON; using defaults");
-                } catch (IOException e) {
+                } catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) {
                     Log.Persistence.Error(e, "settings.json could not be read; using defaults");
                 }
                 return current;
@@ -35,7 +35,7 @@ namespace WrathBuildPlanner.Persistence {
         public static void Save() {
             try {
                 File.WriteAllText(FilePath, JsonConvert.SerializeObject(Current, Formatting.Indented));
-            } catch (IOException e) {
+            } catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) {
                 Log.Persistence.Error(e, "settings.json could not be saved");
             }
         }

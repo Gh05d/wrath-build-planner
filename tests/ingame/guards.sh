@@ -16,7 +16,7 @@ cat > /tmp/wbp-norow.json <<'JSON'
 JSON
 ssh -o ConnectTimeout=6 deck-direct "cat > '$MOD_DIR_DECK/Builds/norow.json'" < /tmp/wbp-norow.json
 expect "$(apply norow.json)" 'NO ROW level=2' 'missing row reported, nothing applied'
-expect "$(bridge 'get WrathBuildPlanner.Engine.WindowTracker.Controller.State.SkillPointsRemaining' | tail -1)" '3' 'skill points untouched'
+expect_eq "$(bridge 'get WrathBuildPlanner.Engine.WindowTracker.Controller.State.SkillPointsRemaining' | tail -1)" '3' 'skill points untouched'
 
 echo "--- assigned file deleted"
 bridge 'invoke WrathBuildPlanner.Engine.TestHooks.Assign norow.json' >/dev/null
@@ -24,6 +24,7 @@ ssh -o ConnectTimeout=6 deck-direct "rm -f '$MOD_DIR_DECK/Builds/norow.json'"
 bridge 'invoke WrathBuildPlanner.UI.BuildsWindow.Toggle' 'wait 1' 'invoke WrathBuildPlanner.UI.BuildsWindow.Toggle' >/dev/null
 out=$(bridge 'invoke WrathBuildPlanner.Engine.TestHooks.PressApply' | sed -n 's/^returned //p')
 expect "$out" 'NO REPORT' 'missing build file: nothing applied'
+expect "$(bridge 'tree WrathBuildPlannerBar' | grep -m1 "Name")$(bridge 'tree WrathBuildPlannerBar')" 'Build missing: norow.json' 'bar says the build is missing'
 bridge 'shot guard-missing' >/dev/null
 bridge 'invoke WrathBuildPlanner.Engine.TestHooks.Assign -' >/dev/null
 
@@ -35,6 +36,7 @@ ssh -o ConnectTimeout=6 deck-direct "cat > '$MOD_DIR_DECK/Builds/history.json'" 
 out=$(apply history.json)
 expect "$out" 'HISTORY expected[Wizard 1] actual[Fighter 1]' 'history notice'
 expect "$out" 'Class: Fighter' 'level still applied'
+expect_not "$out" 'Open Class' 'class not left open'
 ssh -o ConnectTimeout=6 deck-direct "rm -f '$MOD_DIR_DECK/Builds/history.json'"
 
 exit $FAILED

@@ -13,7 +13,7 @@ namespace WrathBuildPlanner.Engine.Steps {
     /// calls SelectPregen(null) and updates the page.
     /// </summary>
     public class LeavePregenStep : IApplyStep {
-        public string Name => "Custom character";
+        public string Name => Messages.Get("step.custom");
 
         public void Run(ApplyContext context) {
             if (!context.State.IsPregen) return;
@@ -30,7 +30,7 @@ namespace WrathBuildPlanner.Engine.Steps {
         public void Run(ApplyContext context) {
             var start = context.Build.Start;
             if (start == null || string.IsNullOrWhiteSpace(start.Race)) return;
-            string label = "Race: " + start.Race;
+            string label = Messages.Get("step.race", start.Race);
 
             var outcome = NameMatcher.Match(start.Race, GameNames.Races());
             if (outcome.Kind != MatchKind.Unique) {
@@ -49,8 +49,11 @@ namespace WrathBuildPlanner.Engine.Steps {
             }
 
             if (string.IsNullOrWhiteSpace(start.RaceBonus) || !context.State.CanSelectRaceStat) return;
-            string bonusLabel = "Racial bonus: " + start.RaceBonus;
-            Vocabulary.TryAttribute(start.RaceBonus, out string canonical);
+            string bonusLabel = Messages.Get("step.race_bonus", start.RaceBonus);
+            if (!Vocabulary.TryAttribute(start.RaceBonus, out string canonical)) {
+                context.Report.Steps.Add(StepResult.Open(bonusLabel, OpenReason.NotFound));
+                return;
+            }
             var stat = (StatType)Enum.Parse(typeof(StatType), canonical);
             if (context.State.SelectedRaceStat == stat) context.Report.Steps.Add(StepResult.Already(bonusLabel));
             else if (context.Controller.SelectRaceStat(stat)) context.Report.Steps.Add(StepResult.Applied(bonusLabel));
@@ -73,7 +76,7 @@ namespace WrathBuildPlanner.Engine.Steps {
 
             var targets = new Dictionary<StatType, int>();
             foreach (var score in scores) {
-                Vocabulary.TryAttribute(score.Key, out string canonical);
+                if (!Vocabulary.TryAttribute(score.Key, out string canonical)) continue;
                 targets[(StatType)Enum.Parse(typeof(StatType), canonical)] = score.Value;
             }
             int moved = 0;
@@ -81,8 +84,8 @@ namespace WrathBuildPlanner.Engine.Steps {
             foreach (var target in targets) moved += Move(context, target.Key, target.Value, true);
 
             var values = context.State.StatsDistribution.StatValues;
-            var missed = targets.Where(t => values[t.Key] != t.Value).Select(t => $"{t.Key} {values[t.Key]} instead of {t.Value}").ToList();
-            string label = "Ability scores: " + string.Join(" ", StatTypeHelper.Attributes.Select(a => values[a].ToString()));
+            var missed = targets.Where(t => values[t.Key] != t.Value).Select(t => Messages.Get("step.scores_missed", t.Key, values[t.Key], t.Value)).ToList();
+            string label = Messages.Get("step.scores", string.Join(" ", StatTypeHelper.Attributes.Select(a => values[a].ToString())));
             if (missed.Count > 0) context.Report.Steps.Add(StepResult.Open(label, OpenReason.NotSelectable, string.Join(", ", missed)));
             else if (moved == 0) context.Report.Steps.Add(StepResult.Already(label));
             else context.Report.Steps.Add(StepResult.Applied(label));
@@ -110,15 +113,18 @@ namespace WrathBuildPlanner.Engine.Steps {
         public void Run(ApplyContext context) {
             string wanted = context.Build.Start?.Alignment;
             if (string.IsNullOrWhiteSpace(wanted) || !context.State.CanSelectAlignment) return;
-            string label = "Alignment: " + wanted;
-            Vocabulary.TryAlignment(wanted, out string canonical);
+            string label = Messages.Get("step.alignment", wanted);
+            if (!Vocabulary.TryAlignment(wanted, out string canonical)) {
+                context.Report.Steps.Add(StepResult.Open(label, OpenReason.NotFound));
+                return;
+            }
             var alignment = (Alignment)Enum.Parse(typeof(Alignment), canonical);
             if (context.Controller.Preview.Descriptor.Alignment.ValueRaw == alignment) {
                 context.Report.Steps.Add(StepResult.Already(label));
                 return;
             }
             if (context.State.IsAlignmentRestricted(alignment)) {
-                context.Report.Steps.Add(StepResult.Open(label, OpenReason.NotSelectable, "not allowed for this class"));
+                context.Report.Steps.Add(StepResult.Open(label, OpenReason.NotSelectable, Messages.Get("step.alignment_class")));
                 return;
             }
             if (context.Controller.SelectAlignment(alignment)) context.Report.Steps.Add(StepResult.Applied(label));

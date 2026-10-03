@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using WrathBuildPlanner.Core;
 
 namespace WrathBuildPlanner.Models {
     public class BuildFile {
@@ -53,32 +54,40 @@ namespace WrathBuildPlanner.Models {
         public override bool CanConvert(Type objectType) => objectType == typeof(PickEntry);
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            if (reader.TokenType == JsonToken.Null) return null;
             var entry = new PickEntry();
             if (reader.TokenType == JsonToken.String) {
                 entry.Pick.Add((string)reader.Value);
                 return entry;
             }
             if (reader.TokenType != JsonToken.StartObject)
-                throw new JsonSerializationException($"A pick must be a name or an object, found {reader.TokenType}.");
+                throw new JsonSerializationException(Messages.Get("pick.bad_token", reader.TokenType));
 
             var obj = JObject.Load(reader);
             foreach (var property in obj.Properties()) {
                 switch (property.Name) {
                     case "in":
-                        entry.In = property.Value.Type == JTokenType.Null ? null : (string)property.Value;
+                        if (property.Value.Type == JTokenType.Null) break;
+                        entry.In = Text(property.Value, "in");
                         break;
                     case "pick":
                         if (property.Value.Type == JTokenType.Array) {
-                            foreach (var item in (JArray)property.Value) entry.Pick.Add((string)item);
+                            foreach (var item in (JArray)property.Value) entry.Pick.Add(Text(item, "pick"));
                         } else {
-                            entry.Pick.Add((string)property.Value);
+                            entry.Pick.Add(Text(property.Value, "pick"));
                         }
                         break;
                     default:
-                        throw new JsonSerializationException($"Unknown field '{property.Name}' in a pick (allowed: in, pick).");
+                        throw new JsonSerializationException(Messages.Get("pick.unknown_field", property.Name));
                 }
             }
             return entry;
+        }
+
+        // Only text is a name; a nested object or list must not surface as a cast exception.
+        static string Text(JToken token, string field) {
+            if (token.Type != JTokenType.String) throw new JsonSerializationException(Messages.Get("pick.bad_value", field, token.Type));
+            return (string)token;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {

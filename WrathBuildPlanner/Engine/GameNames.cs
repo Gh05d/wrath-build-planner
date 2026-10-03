@@ -85,9 +85,8 @@ namespace WrathBuildPlanner.Engine {
                 Logging.Log.Engine.Error(e, "page title lookup failed");
             }
             var blueprint = selection.Selection as BlueprintFeature;
-            string group = selection.Selection.GetGroup().ToString();
-            if (blueprint == null) return Make(selection, title, group);
-            return Make(selection, title, blueprint.Name, English(blueprint.m_DisplayName), blueprint.name, group);
+            if (blueprint == null) return Make(selection, title);
+            return Make(selection, title, blueprint.Name, English(blueprint.m_DisplayName), blueprint.name);
         }
 
         public static List<NameCandidate> Classes() =>

@@ -154,7 +154,7 @@ namespace WrathBuildPlanner.UI {
                 string fileName = AssignmentStore.Get(unit);
                 var entry = Main.Library.Find(fileName);
                 string buildName = fileName == null ? "window.none".i18n()
-                    : entry != null && entry.Ok ? entry.Build.Name : Strings.Format("bar.missing", fileName);
+                    : entry != null && entry.Ok ? DisplayName(entry) : Strings.Format("bar.missing", fileName);
 
                 var row = Widgets.Row(partyList.transform, "Unit", RowHeight);
                 Widgets.InRow(Widgets.InkLabel(row, unit.CharacterName, RowFont).gameObject, 220f, 0f);
@@ -178,10 +178,11 @@ namespace WrathBuildPlanner.UI {
             foreach (var entry in Main.Library.Entries) {
                 var captured = entry;
                 var row = Widgets.Row(libraryList.transform, "Build", RowHeight);
-                string name = entry.Build?.Name ?? entry.FileName;
+                string name = DisplayName(entry);
                 var parts = new List<string>();
                 if (!string.IsNullOrWhiteSpace(entry.Build?.Author)) parts.Add(Strings.Format("window.by", entry.Build.Author));
                 if (!string.IsNullOrWhiteSpace(entry.Build?.For)) parts.Add(Strings.Format("window.for", entry.Build.For));
+                if (!string.IsNullOrWhiteSpace(entry.Build?.Source)) parts.Add(entry.Build.Source);
                 string text = parts.Count > 0 ? $"{name}  ({string.Join(", ", parts)})" : name;
                 var label = Widgets.InkLabel(row, text, RowFont - 1f);
                 label.enableWordWrapping = false;
@@ -219,6 +220,14 @@ namespace WrathBuildPlanner.UI {
             return LevelPlanner.RowFor(entry.Build, next) != null ? Strings.Format("window.next_level", next) : Strings.Format("bar.no_row", next);
         }
 
+        // Two files can carry the same build name (a second paste becomes name-2.json): show the file then.
+        static string DisplayName(LibraryEntry entry) {
+            string name = entry.Build?.Name;
+            if (string.IsNullOrWhiteSpace(name)) return entry.FileName;
+            bool shared = Main.Library.Entries.Count(e => e.Build?.Name == name) > 1;
+            return shared ? $"{name} [{entry.FileName}]" : name;
+        }
+
         static void ShowIssues(LibraryEntry entry) {
             Say(entry.Issues.Count == 0 ? $"{entry.FileName}: {"window.valid".i18n()}"
                 : entry.FileName + ":\n" + string.Join("\n", entry.Issues.Select(i => (i.IsError ? "! " : "- ") + i.Message)));
@@ -247,10 +256,10 @@ namespace WrathBuildPlanner.UI {
         // Own picker instead of the kit's: the kit draws on the in-game canvas, which does not exist in the main menu.
         static void PickBuild(UnitEntityData unit) {
             var valid = Main.Library.Entries.Where(e => e.Ok).ToList();
-            var canvas = UiRoot.Canvas();
-            if (canvas == null) return;
+            if (overlay == null) return;
 
-            var (dim, dimRect) = UIHelpers.Create("WrathBuildPlannerPicker", canvas);
+            // A child of the window, so closing the window (Escape, outside click) takes the picker with it.
+            var (dim, dimRect) = UIHelpers.Create("WrathBuildPlannerPicker", overlay.transform);
             dimRect.FillParent();
             UIHelpers.AddBackground(dim, Theme.DimPopup);
             dim.AddComponent<Button>().onClick.AddListener(() => UnityEngine.Object.Destroy(dim));
@@ -273,7 +282,7 @@ namespace WrathBuildPlanner.UI {
                 }, 520f, 1f);
             };
             add("window.none".i18n(), null);
-            foreach (var entry in valid) add(entry.Build.Name, entry.FileName);
+            foreach (var entry in valid) add(DisplayName(entry), entry.FileName);
         }
     }
 }
