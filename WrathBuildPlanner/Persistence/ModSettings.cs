@@ -5,7 +5,7 @@ using WrathBuildPlanner.Logging;
 
 namespace WrathBuildPlanner.Persistence {
     public class ModSettingsData {
-        public string Hotkey = "B";
+        public string Hotkey = "P";
         public string Language = "auto";
         public bool Verbose;
     }

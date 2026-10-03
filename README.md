@@ -7,7 +7,7 @@ creation window. The mod makes the picks for that level; you look them over and 
 ## How it works
 
 1. Put a build file (`.json`) into `Mods/WrathBuildPlanner/Builds/`, or open the Builds window
-   (button in the HUD, or Ctrl+B) and choose **Paste from clipboard**.
+   (button in the HUD, or Ctrl+P) and choose **Paste from clipboard**.
 2. In the Builds window, pick a build for each character. During character creation, use
    **Change…** in the bar at the bottom of the window.
 3. On every level-up press **Apply build**. Whatever could not be set is listed with the reason.
