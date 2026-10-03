@@ -9,7 +9,7 @@ FAILED=0
 bridge() { bash "$BRIDGE_DIR/bridge.sh" "$@"; }
 
 # push_builds — copy tests/builds/*.json into the mod's Builds folder on the Deck.
-push_builds() { tar -C "$HERE/../builds" -cf - . | ssh -o ConnectTimeout=6 deck-direct "mkdir -p '$MOD_DIR_DECK/Builds' && tar -xf - -C '$MOD_DIR_DECK/Builds'"; }
+push_builds() { tar -C "$HERE/../builds" -cf - . | ssh -o ConnectTimeout=6 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 deck-direct "mkdir -p '$MOD_DIR_DECK/Builds' && tar -xf - -C '$MOD_DIR_DECK/Builds'"; }
 
 # apply <file> — apply the open window's level from a build file; prints the report line.
 apply() { bridge "invoke WrathBuildPlanner.Engine.TestHooks.Apply $1" | sed -n 's/^returned //p'; }

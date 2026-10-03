@@ -27,3 +27,9 @@ In-game tests: skill `testing-mods-in-game`, scripts in `tests/ingame/`.
 - **Page titles** come from `FeatureSelectionExtensions.GetMenuLabel(selectionState)`, not from the selection blueprint's name (wizard school: page "School", blueprint "Specialist School").
 - **Build bar placement (2026-10-03, 1280x800):** bar bottom-left below the book (window units 24/14, 610x46), result panel bottom-right above the "Class progression" button. Checked on the creation pages Character and Portrait and on the level-up pages Feat, School, Arcane Bond, Opposition School. The window's canvas is laid out for 1920x1200: sizes in `BuildBar` are window units, two thirds of that on the Deck.
 - **Page jump after Apply** must wait a few frames (`PlannerController.JumpDelayFrames`): a same-frame page switch left the view blank.
+## In-game tests
+
+    bash tests/ingame/all.sh          # guards, multiclass, mythic, chargen — restarts the game per script
+
+Scripts assert on the English result text: game language English, mod language `auto`.
+`Engine/TestHooks.cs` holds the static entry points the scripts call through DevBridge.
