@@ -1,0 +1,35 @@
+{
+  "format": 1,
+  "name": "Test Multiclass",
+  "for": "main",
+  "skills": ["Knowledge (Arcana)", "Persuasion", "Mobility", "Athletics", "Perception"],
+  "levels": [
+    { "level": 1, "class": "Fighter" },
+    { "level": 2, "class": "Wizard",
+      "picks": [
+        { "in": "Wizard Bonus Feat", "pick": ["Spell Focus", "Evocation"] },
+        { "in": "School", "pick": "Evocation" },
+        { "in": "Opposition School", "pick": "Necromancy" },
+        { "in": "Opposition School", "pick": "Abjuration" },
+        "Hare Familiar"
+      ],
+      "spells": ["Magic Missile", "Grease", "Mage Armor", "Shield"] },
+    { "level": 3, "class": "Sorcerer", "archetype": "Sage Sorcerer",
+      "picks": [
+        "Weapon Focus (Longsword)",
+        { "in": "Sorcerer Bonus Feat", "pick": "Combat Casting" },
+        "Not A Real Feat"
+      ],
+      "spells": ["Mage Armor", "Grease"] },
+    { "level": 4, "class": "Cavalier", "abilityPoint": "Charisma",
+      "picks": [
+        { "in": "Order", "pick": "Order of the Cockatrice" },
+        "Precise Strike",
+        "Horse"
+      ] }
+  ],
+  "mythic": [
+    { "rank": 1, "picks": [ "Close to the Heavens", { "in": "Mythic Ability", "pick": "Archmage Armor" } ] },
+    { "rank": 2, "picks": [ ] }
+  ]
+}

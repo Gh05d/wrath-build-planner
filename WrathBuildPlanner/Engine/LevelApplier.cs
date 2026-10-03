@@ -67,7 +67,10 @@ namespace WrathBuildPlanner.Engine {
         }
 
         static IEnumerable<IApplyStep> StepsFor(LevelUpState.CharBuildMode mode) {
-            if (mode == LevelUpState.CharBuildMode.Mythic) yield break;
+            if (mode == LevelUpState.CharBuildMode.Mythic) {
+                yield return new PickStep();
+                yield break;
+            }
             if (mode == LevelUpState.CharBuildMode.CharGen) {
                 yield return new LeavePregenStep();
                 yield return new RaceStep();
@@ -81,6 +84,7 @@ namespace WrathBuildPlanner.Engine {
                 yield return new AttributePointStep();
             }
             yield return new SkillStep();
+            yield return new PickStep();
         }
 
         static HistoryCheck History(ApplyContext context) {

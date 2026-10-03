@@ -72,13 +72,22 @@ namespace WrathBuildPlanner.Engine {
                 English(item.Feature.m_DisplayName), item.Feature.name, item.Feature.AssetGuid.ToString());
         }
 
-        /// <summary>A selection, named as its page is titled, plus its internal name and feature group.</summary>
+        /// <summary>
+        /// A selection, named as its page is titled. The title is FeatureSelectionExtensions.GetMenuLabel
+        /// (what CharGenFeatureSelectorPhaseVM passes to SetPhaseName) and can differ from the blueprint's own
+        /// name: the wizard's school page is titled "School", its blueprint is named "Specialist School".
+        /// </summary>
         public static NameCandidate OfSelection(FeatureSelectionState selection) {
+            string title = null;
+            try {
+                title = Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector.FeatureSelectionExtensions.GetMenuLabel(selection);
+            } catch (Exception e) {
+                Logging.Log.Engine.Error(e, "page title lookup failed");
+            }
             var blueprint = selection.Selection as BlueprintFeature;
             string group = selection.Selection.GetGroup().ToString();
-            if (blueprint == null) return Make(selection, group);
-            return Make(selection, string.IsNullOrEmpty(blueprint.Name) ? blueprint.name : blueprint.Name,
-                English(blueprint.m_DisplayName), blueprint.name, group);
+            if (blueprint == null) return Make(selection, title, group);
+            return Make(selection, title, blueprint.Name, English(blueprint.m_DisplayName), blueprint.name, group);
         }
 
         public static List<NameCandidate> Classes() =>
