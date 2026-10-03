@@ -87,5 +87,22 @@ namespace WrathBuildPlanner.Engine {
                 .Select(c => $"{c.Name}={c.LocalizedName.LoadString(pack, target)}");
             return $"current={Kingmaker.Localization.LocalizationManager.CurrentLocale} " + string.Join(", ", classes);
         }
+
+        /// <summary>Assign a build to the unit in the open window (file name, or "-" to clear).</summary>
+        static string Assign(string buildFileName) {
+            Main.Library.Reload();
+            var unit = WindowTracker.Controller?.Unit;
+            Persistence.AssignmentStore.Set(unit, buildFileName == "-" ? null : buildFileName);
+            UI.PlannerController.Instance?.Bar?.Refresh();
+            return "assigned " + Persistence.AssignmentStore.Get(unit);
+        }
+
+        /// <summary>The same path as the bar's Apply button; returns the rendered result text on one line.</summary>
+        static string PressApply() {
+            var bar = UI.PlannerController.Instance?.Bar;
+            if (bar == null) return "NO BAR";
+            bar.Apply();
+            return bar.LastReport == null ? "NO REPORT" : UI.BuildBar.Render(bar.LastReport).Replace("\n", " || ");
+        }
     }
 }

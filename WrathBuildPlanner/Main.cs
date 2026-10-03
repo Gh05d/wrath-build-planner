@@ -22,6 +22,7 @@ namespace WrathBuildPlanner {
 
             UI.AssetLoader.Init();
             UI.ThemeProvider.Init();
+            UI.PlannerController.Install();
 
             Library = new Persistence.BuildLibrary(System.IO.Path.Combine(ModPath, "Builds"), Engine.GameNames.Known);
             EventBus.Subscribe(areaWatcher = new AreaWatcher());
@@ -32,6 +33,7 @@ namespace WrathBuildPlanner {
 
         static bool OnUnload(UnityModManager.ModEntry modEntry) {
             try {
+                UI.PlannerController.Uninstall();
                 if (areaWatcher != null) EventBus.Unsubscribe(areaWatcher);
                 harmony.UnpatchAll(modEntry.Info.Id);
             } finally {
