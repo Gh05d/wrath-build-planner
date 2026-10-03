@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "name": "Test Fighter",
+  "for": "main",
+  "start": {
+    "race": "Human",
+    "raceBonus": "Strength",
+    "abilityScores": { "Strength": 16, "Dexterity": 14, "Constitution": 14, "Intelligence": 12, "Wisdom": 12, "Charisma": 11 },
+    "alignment": "Lawful Good"
+  },
+  "skills": ["Athletics", "Perception", "Persuasion", "Mobility"],
+  "levels": [
+    { "level": 1, "class": "Fighter" },
+    { "level": 2, "class": "Fighter" },
+    { "level": 3, "class": "Fighter" },
+    { "level": 4, "class": "Fighter", "abilityPoint": "Strength" }
+  ]
+}
