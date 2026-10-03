@@ -104,5 +104,16 @@ namespace WrathBuildPlanner.Engine {
             bar.Apply();
             return bar.LastReport == null ? "NO REPORT" : UI.BuildBar.Render(bar.LastReport).Replace("\n", " || ");
         }
+
+        static string ToggleWindow() {
+            UI.BuildsWindow.Toggle();
+            return UI.BuildsWindow.IsOpen ? "open" : "closed";
+        }
+
+        /// <summary>Import text given as base64 (DevBridge arguments cannot contain spaces).</summary>
+        static string ImportText(string base64) {
+            string text = Encoding.UTF8.GetString(System.Convert.FromBase64String(base64));
+            return UI.BuildsWindow.ImportText(text);
+        }
     }
 }

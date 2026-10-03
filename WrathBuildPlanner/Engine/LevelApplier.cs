@@ -68,8 +68,10 @@ namespace WrathBuildPlanner.Engine {
                 Logging.Log.Engine.Error(e, "spell report failed");
             }
 
-            foreach (var result in report.Steps)
-                Logging.Log.Engine.Info($"  {result.Status} {result.Label}{(result.Status == StepStatus.Open ? " (" + result.Reason + (result.Detail != null ? ": " + result.Detail : "") + ")" : "")}");
+            if (Persistence.ModSettings.Current.Verbose) {
+                foreach (var result in report.Steps)
+                    Logging.Log.Engine.Info($"  {result.Status} {result.Label}{(result.Status == StepStatus.Open ? " (" + result.Reason + (result.Detail != null ? ": " + result.Detail : "") + ")" : "")}");
+            }
             return report;
         }
 

@@ -106,6 +106,7 @@ namespace WrathBuildPlanner.UI {
             contentRect.anchorMax = new Vector2(1f, 1f);
             contentRect.pivot = new Vector2(0f, 1f);
             contentRect.sizeDelta = Vector2.zero;
+            contentRect.anchoredPosition = Vector2.zero;
             var fitter = content.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             // The text sits on the content object itself so the ContentSizeFitter can size it; the kit's
