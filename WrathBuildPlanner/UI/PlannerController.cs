@@ -3,6 +3,11 @@ using System.Linq;
 using Kingmaker;
 using Kingmaker.UI.MVVM._PCView.CharGen;
 using Kingmaker.UI.MVVM._VM.CharGen;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases.Appearance;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases.Name;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases.Portrait;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases.Voice;
 using Kingmaker.UnitLogic.Class.LevelUp;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,6 +35,9 @@ namespace WrathBuildPlanner.UI {
         // Switching pages in the same frame as the picks left the view on a blank page (observed in-game),
         // so the jump waits a few frames.
         const int JumpDelayFrames = 10;
+        const int WalkEveryFrames = 6;
+        const int MaxWalkSteps = 40;
+        int walkSteps;
 
         public BuildBar Bar => bar;
 
@@ -149,20 +157,27 @@ namespace WrathBuildPlanner.UI {
 
 
         /// <summary>
-        /// Moves the window to the first page that still needs the player, or to the last page (summary)
-        /// when nothing is open. Pages unlock in order, so "first not completed" is always reachable.
+        /// Walks the window forward to the first page that needs the player, or to the summary if none does.
+        /// A page only knows whether it is complete once it has been shown, and later pages unlock as earlier
+        /// ones complete — so the pages are stepped through one by one, a few frames apart, the same way
+        /// pressing Next would. The walk stops on pages that are the player's own business (portrait,
+        /// appearance, voice, name) even if the game considers them complete by default.
         /// </summary>
         public void JumpToFirstOpenPage() {
+            walkSteps = MaxWalkSteps;
             jumpInFrames = JumpDelayFrames;
         }
 
         void JumpNow() {
             var window = WindowTracker.Window;
-            if (window == null) return;
-            var group = window.PhasesSelectionGroupRadioVM;
-            var pages = group.EntitiesCollection.ToList();
-            var target = pages.FirstOrDefault(p => !p.IsCompleted.Value) ?? pages.LastOrDefault();
-            if (target != null) group.TrySelectEntity(target);
+            if (window == null || walkSteps-- <= 0) return;
+            var current = window.CurrentPhaseVM.Value;
+            if (current == null || !current.IsCompleted.Value || IsPlayersPage(current)) return;
+            if (!window.PhasesSelectionGroupRadioVM.SelectNextValidEntity()) return;
+            jumpInFrames = WalkEveryFrames;
         }
+
+        static bool IsPlayersPage(CharGenPhaseBaseVM page) =>
+            page is CharGenPortraitPhaseVM || page is CharGenAppearancePhaseVM || page is CharGenVoicePhaseVM || page is CharGenNamePhaseVM;
     }
 }

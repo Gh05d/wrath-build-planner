@@ -26,10 +26,15 @@ In-game tests: skill `testing-mods-in-game`, scripts in `tests/ingame/`.
 - **Spell picks reset after a later feature pick (2026-10-03):** when a feature is selected in a later frame, the game resets that level's spell choices (GameLogFull: `Invalid action: SelectSpell`). `SpellStep` therefore works from the live state and a second Apply restores the spells.
 - **Page titles** come from `FeatureSelectionExtensions.GetMenuLabel(selectionState)`, not from the selection blueprint's name (wizard school: page "School", blueprint "Specialist School").
 - **Build bar placement (2026-10-03, 1280x800):** bar bottom-left below the book (window units 24/14, 610x46), result panel bottom-right above the "Class progression" button. Checked on the creation pages Character and Portrait and on the level-up pages Feat, School, Arcane Bond, Opposition School. The window's canvas is laid out for 1920x1200: sizes in `BuildBar` are window units, two thirds of that on the Deck.
-- **Page jump after Apply** must wait a few frames (`PlannerController.JumpDelayFrames`): a same-frame page switch left the view blank.
+- **Page walk after Apply** (2026-10-03): a same-frame page switch left the view blank, and a page only reports itself complete once it has been shown. `PlannerController` therefore waits a few frames and then steps forward page by page (like Next) until a page needs the player; it stops on portrait, appearance, voice and name in any case. Lands on Portrait in creation and on the summary in a fully applied level-up (`extras.sh`, `chargen.sh`).
+- **Mythic path (rank 3)**: `SelectClass` would accept any path; the unlock gate is only in the page's view model. `MythicPathStep.IsOffered` repeats those checks. On the fixture Lich is left to the player, Angel is applied (`mythic.sh`).
+- **Spell levels above 1**: Wizard 3 learns second-level spells through the "extra" slots (`extras.sh`).
+- **Creation-time assignment**: held in memory, bound to the main character on the first area load, dropped when creation is cancelled (`example.sh`).
+- **Respec**: not verified; the bar is hidden in that window mode.
+- **Not verified**: "Paste from clipboard" under Proton (the import behind it is), 16:9 layout, a mercenary's assignment made during its creation, spontaneous casters swapping spells, the game running in a language other than English.
 ## In-game tests
 
-    bash tests/ingame/all.sh          # guards, multiclass, mythic, chargen — restarts the game per script
+    bash tests/ingame/all.sh          # guards, multiclass, mythic, extras, chargen, example — restarts the game per script
 
 Scripts assert on the English result text: game language English, mod language `auto`.
 `Engine/TestHooks.cs` holds the static entry points the scripts call through DevBridge.

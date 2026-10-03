@@ -1,0 +1,11 @@
+{
+  "format": 1,
+  "name": "Test Wizard Three",
+  "skills": ["Knowledge (Arcana)", "Perception", "Mobility"],
+  "levels": [
+    { "level": 1, "class": "Fighter" },
+    { "level": 2, "class": "Wizard", "spells": ["Magic Missile", "Grease", "Mage Armor", "Shield"] },
+    { "level": 3, "class": "Wizard", "spells": ["Burning Hands", "Enlarge Person"] },
+    { "level": 4, "class": "Wizard", "abilityPoint": "Intelligence", "spells": ["Mirror Image", "Glitterdust"] }
+  ]
+}

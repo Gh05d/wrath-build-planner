@@ -28,7 +28,9 @@ expect_not() {
 
 # expect_eq <actual> <expected> <what> — exact comparison.
 expect_eq() {
-  if [ "$1" = "$2" ]; then echo "PASS $3"; else echo "FAIL $3 — expected '$2', got '$1'"; FAILED=1; fi
+  local actual
+  actual=$(tr -d '\r' <<<"$1" | sed 's/[[:space:]]*$//')   # results come from a Windows process: strip CR
+  if [ "$actual" = "$2" ]; then echo "PASS $3"; else echo "FAIL $3 — expected '$2', got '$actual'"; FAILED=1; fi
 }
 
 # finish <shot name> — page forward until Complete shows, screenshot the summary, press Complete.
