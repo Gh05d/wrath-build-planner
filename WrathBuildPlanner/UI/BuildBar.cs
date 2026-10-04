@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Kingmaker.UI.MVVM._PCView.CharGen;
 using Kingmaker.UnitLogic.Class.LevelUp;
 using TMPro;
@@ -16,8 +17,9 @@ using WrathBuildPlanner.Persistence;
 namespace WrathBuildPlanner.UI {
     /// <summary>
     /// The bar inside the level-up / creation window: assigned build, Apply, Change, and a collapsible
-    /// field (preview before applying, result list afterwards). Parented to the window's own view so it
-    /// lives and dies with it and works in the main menu too.
+    /// field (preview before applying, result list afterwards, plus a note on the pages the build leaves
+    /// to the player). Parented to the window's own view so it lives and dies with it and works in the
+    /// main menu too.
     /// </summary>
     public class BuildBar {
         // Sizes are in the window's own units: its canvas is laid out for 1920x1200 and scaled down
@@ -30,8 +32,9 @@ namespace WrathBuildPlanner.UI {
         const float DetailsHeight = 380f;
         const float DetailsRight = 30f;
         const float DetailsBottom = 132f;
-        const float DetailsMinHeight = 70f;
-        const float DetailsPadding = 12f;
+        const float DetailsMinHeight = 80f;
+        const float DetailsPadding = 20f;
+        const float DetailsPaddingX = 26f;
         const float NameFont = 20f;
         const float ButtonFont = 19f;
         const float DetailsFont = 20f;
@@ -39,7 +42,11 @@ namespace WrathBuildPlanner.UI {
         GameObject root;
         GameObject details;
         TextMeshProUGUI nameLabel;
+        TextMeshProUGUI changeLabel;
         TextMeshProUGUI detailsText;
+        string detailsBody = "";
+        bool hasBuild;
+        bool onPlayersPage;
 
         public ApplyReport LastReport { get; private set; }
         public event Action ChangeRequested;
@@ -64,14 +71,22 @@ namespace WrathBuildPlanner.UI {
 
             var (nameBox, _) = UIHelpers.Create("Name", root.transform);
             Widgets.InRow(nameBox, 170f, 1f);
-            UIHelpers.AddBackground(nameBox, Theme.HintBacking);
-            bar.nameLabel = UIHelpers.AddLabel(nameBox, "", NameFont, TextAlignmentOptions.MidlineLeft, Theme.HintText);
-            bar.nameLabel.margin = new Vector4(8f, 0f, 8f, 0f);
+            // The name field opens the Builds window as well: it is where players look for the choice.
+            var nameButton = nameBox.AddComponent<Button>();
+            nameButton.targetGraphic = Framed(nameBox, ThemeProvider.HintAnnotation, Theme.HintBacking, 4f);
+            Widgets.ApplyColorTint(nameButton);
+            nameButton.onClick.AddListener(() => bar.ChangeRequested?.Invoke());
+            bar.nameLabel = UIHelpers.AddLabel(nameBox, "", NameFont, TextAlignmentOptions.Midline, Theme.HintText);
+            bar.nameLabel.margin = new Vector4(14f, 0f, 14f, 0f);
             bar.nameLabel.enableWordWrapping = false;
             bar.nameLabel.overflowMode = TextOverflowModes.Ellipsis;
 
             Widgets.ActionButton(root.transform, "Apply", "bar.apply".i18n(), ButtonFont, bar.Apply, 180f);
-            Widgets.ActionButton(root.transform, "Change", "bar.change".i18n(), ButtonFont, () => bar.ChangeRequested?.Invoke(), 130f);
+            // Sized for the longer of its two labels; Refresh picks the one that fits the state.
+            string set = "bar.set".i18n(), change = "bar.change".i18n();
+            var changeButton = Widgets.ActionButton(root.transform, "Change", set.Length >= change.Length ? set : change,
+                ButtonFont, () => bar.ChangeRequested?.Invoke(), 130f);
+            bar.changeLabel = changeButton.GetComponentInChildren<TextMeshProUGUI>();
             Widgets.ActionButton(root.transform, "Details", "bar.details".i18n(), ButtonFont, bar.ToggleDetails, 110f);
 
             bar.BuildDetails(view.transform);
@@ -89,7 +104,8 @@ namespace WrathBuildPlanner.UI {
             rect.pivot = new Vector2(1f, 0f);
             rect.anchoredPosition = new Vector2(-DetailsRight, DetailsBottom);
             rect.sizeDelta = new Vector2(DetailsWidth, DetailsHeight);
-            UIHelpers.AddBackground(box, Theme.HintBacking);
+            // The game's own tooltips are torn parchment with ink: the panel matches them.
+            Framed(box, ThemeProvider.PopupPaper, Theme.PaperFallback, 3f);
 
             var scroll = box.AddComponent<ScrollRect>();
             scroll.horizontal = false;
@@ -97,8 +113,8 @@ namespace WrathBuildPlanner.UI {
 
             var (viewport, viewportRect) = UIHelpers.Create("Viewport", box.transform);
             viewportRect.FillParent();
-            viewportRect.offsetMin = new Vector2(14f, DetailsPadding);
-            viewportRect.offsetMax = new Vector2(-14f, -DetailsPadding);
+            viewportRect.offsetMin = new Vector2(DetailsPaddingX, DetailsPadding);
+            viewportRect.offsetMax = new Vector2(-DetailsPaddingX, -DetailsPadding);
             viewport.AddComponent<RectMask2D>();
 
             var (content, contentRect) = UIHelpers.Create("Content", viewport.transform);
@@ -111,11 +127,11 @@ namespace WrathBuildPlanner.UI {
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             // The text sits on the content object itself so the ContentSizeFitter can size it; the kit's
             // AddLabel creates a stretched child, which a fitter without a layout group cannot measure.
-            var probe = UIHelpers.AddLabel(box, "", DetailsFont, TextAlignmentOptions.TopLeft, Theme.HintText);
+            var probe = UIHelpers.AddLabel(box, "", DetailsFont, TextAlignmentOptions.TopLeft, Theme.Ink);
             detailsText = content.AddComponent<TextMeshProUGUI>();
             detailsText.font = probe.font;
             detailsText.fontSize = probe.fontSize;
-            detailsText.color = Theme.HintText;
+            detailsText.color = Theme.Ink;
             detailsText.alignment = TextAlignmentOptions.TopLeft;
             detailsText.enableWordWrapping = true;
             detailsText.raycastTarget = false;
@@ -126,13 +142,47 @@ namespace WrathBuildPlanner.UI {
             details.SetActive(false);
         }
 
+        // Sliced theme sprite; a higher multiplier draws its border thinner. Flat colour if the sprite is missing.
+        static Image Framed(GameObject obj, Sprite sprite, Color fallback, float multiplier) {
+            var image = UIHelpers.AddBackground(obj, sprite == null ? fallback : Color.white);
+            if (sprite == null) return image;
+            image.sprite = sprite;
+            image.type = Image.Type.Sliced;
+            image.pixelsPerUnitMultiplier = multiplier;
+            return image;
+        }
+
+        void SetDetails(string body) {
+            detailsBody = body;
+            RenderDetails();
+        }
+
         // The panel is as tall as its text, up to DetailsHeight; longer text scrolls.
-        void SetDetails(string text) {
+        void RenderDetails() {
+            var lines = detailsBody.Length == 0 ? new List<string>() : detailsBody.Split('\n').Select(Ink).ToList();
+            if (hasBuild && onPlayersPage) {
+                if (lines.Count > 0) lines.Insert(0, "");
+                lines.Insert(0, $"<i><color=#{Hex(Theme.InkMuted)}>{Plain("bar.players_page".i18n())}</color></i>");
+            }
+            string text = string.Join("\n", lines);
             detailsText.text = text;
-            float width = DetailsWidth - 28f;
+            float width = DetailsWidth - 2f * DetailsPaddingX;
             float wanted = detailsText.GetPreferredValues(text, width, 0f).y + 2f * DetailsPadding;
             details.Rect().sizeDelta = new Vector2(DetailsWidth, Mathf.Clamp(wanted, DetailsMinHeight, DetailsHeight));
         }
+
+        // Open items in red, done items in muted ink, everything else (summary, preview) in plain ink.
+        static string Ink(string line) {
+            if (line.StartsWith("! ")) return $"<color=#{Hex(Theme.StatusError)}>{Plain(line)}</color>";
+            if (line.StartsWith("+ ")) return $"<color=#{Hex(Theme.InkMuted)}>{Plain(line)}</color>";
+            if (line.StartsWith("    ")) return $"<color=#{Hex(Theme.StatusWarn)}>{Plain(line)}</color>";
+            return Plain(line);
+        }
+
+        // Build and feature names come from files: never let them be read as markup.
+        static string Plain(string text) => text.Length == 0 ? text : $"<noparse>{text}</noparse>";
+
+        static string Hex(Color color) => ColorUtility.ToHtmlStringRGB(color);
 
         const string BarName = "WrathBuildPlannerBar";
         const string DetailsName = "WrathBuildPlannerDetails";
@@ -151,6 +201,19 @@ namespace WrathBuildPlanner.UI {
             root = null;
             details = null;
         }
+
+        /// <summary>
+        /// Called every frame: notes whether the window shows a page the build never fills
+        /// (portrait, appearance, voice, name) and adds or drops the note in the details.
+        /// </summary>
+        public void SyncPage(bool playersPage) {
+            if (root == null || playersPage == onPlayersPage) return;
+            onPlayersPage = playersPage;
+            RenderDetails();
+        }
+
+        public string DescribeForTests() =>
+            $"name={nameLabel.text} | change={changeLabel.text} | details({details.activeSelf})={Regex.Replace(detailsText.text, "<[^>]+>", "")}";
 
         void ToggleDetails() {
             if (details == null) return;
@@ -174,12 +237,15 @@ namespace WrathBuildPlanner.UI {
         public void Refresh() {
             if (root == null) return;
             var entry = Assigned(out string fileName);
+            hasBuild = entry != null && entry.Ok;
+            changeLabel.text = (fileName == null ? "bar.set" : "bar.change").i18n();
+            nameLabel.fontStyle = fileName == null ? FontStyles.Italic : FontStyles.Normal;
             if (fileName == null) {
                 nameLabel.text = "bar.no_build".i18n();
                 SetDetails("");
                 return;
             }
-            if (entry == null || !entry.Ok) {
+            if (!hasBuild) {
                 nameLabel.text = Strings.Format("bar.missing", fileName);
                 SetDetails(entry == null ? "" : string.Join("\n", entry.Issues.Select(i => "! " + i.Message)));
                 return;

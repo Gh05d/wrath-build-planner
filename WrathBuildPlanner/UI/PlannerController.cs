@@ -60,6 +60,7 @@ namespace WrathBuildPlanner.UI {
         void Update() {
             try {
                 SyncBar();
+                SyncPage();
                 SyncHudButton();
                 HandleKeys();
                 if (jumpInFrames > 0 && --jumpInFrames == 0) JumpNow();
@@ -109,6 +110,12 @@ namespace WrathBuildPlanner.UI {
                 Log.UI.Error(e, "build bar could not be created");
                 BuildBar.DestroyLeftovers(view);
             }
+        }
+
+        void SyncPage() {
+            if (bar == null) return;
+            var page = WindowTracker.Window?.CurrentPhaseVM.Value;
+            bar.SyncPage(page != null && IsPlayersPage(page));
         }
 
         void OnChangeRequested() {

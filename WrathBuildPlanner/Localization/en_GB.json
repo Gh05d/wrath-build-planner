@@ -2,6 +2,8 @@
   "bar.no_build": "No build",
   "bar.apply": "Apply build",
   "bar.change": "Change…",
+  "bar.set": "Set build…",
+  "bar.players_page": "Not part of the build: portrait, appearance, voice and name are left to you.",
   "bar.details": "Details",
   "bar.preview": "This level: {0}",
   "bar.no_row": "The build has no entry for level {0}.",

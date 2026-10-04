@@ -2,6 +2,8 @@
   "bar.no_build": "未指定构筑",
   "bar.apply": "应用构筑",
   "bar.change": "更换…",
+  "bar.set": "选择构筑…",
+  "bar.players_page": "不属于构筑：肖像、外观、声音和名字由你自行选择。",
   "bar.details": "详情",
   "bar.preview": "本级：{0}",
   "bar.no_row": "该构筑没有等级 {0} 的条目。",

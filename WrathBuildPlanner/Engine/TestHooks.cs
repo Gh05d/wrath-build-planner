@@ -105,6 +105,12 @@ namespace WrathBuildPlanner.Engine {
             return bar.LastReport == null ? "NO REPORT" : UI.BuildBar.Render(bar.LastReport).Replace("\n", " || ");
         }
 
+        /// <summary>What the bar shows: name field, Change button label, details panel (open flag and text).</summary>
+        static string BarText() {
+            var bar = UI.PlannerController.Instance?.Bar;
+            return bar == null ? "NO BAR" : bar.DescribeForTests().Replace("\n", " || ");
+        }
+
         static string ToggleWindow() {
             UI.BuildsWindow.Toggle();
             return UI.BuildsWindow.IsOpen ? "open" : "closed";
