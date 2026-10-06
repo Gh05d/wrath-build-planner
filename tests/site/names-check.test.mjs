@@ -173,6 +173,16 @@ test('sixty picks without "in" are checked fast (Important 1)', () => {
   assert.ok(ms < 1000, `${Math.round(ms)} ms`);
 });
 
+test('hundreds of distinct unknown names stay fast (a nonsense answer must not freeze the page)', () => {
+  const levels = Array.from({ length: 20 }, (_, i) => ({ level: i + 1, class: 'Fighter', picks: Array.from({ length: 40 }, (_, j) => `Made up feat ${i} ${j}`) }));
+  const started = performance.now();
+  const issues = checkNames({ format: 1, name: 'x', levels }, real);
+  const ms = performance.now() - started;
+  console.log(`800 unknown picks: ${Math.round(ms)} ms`);
+  assert.equal(issues.length, 800);
+  assert.ok(ms < 1500, `${Math.round(ms)} ms`);
+});
+
 test('test builds: no format errors', () => {
   for (const file of readdirSync(new URL('../builds/', import.meta.url))) {
     const b = read(`../builds/${file}`);

@@ -46,6 +46,7 @@ Spec: `pathfinder-mods/docs/superpowers/specs/2026-10-04-wrath-build-planner-aut
 
     node --test tests/site/*.test.mjs        # checker tests incl. the shared vectors
     cd site && python3 -m http.server 8765    # local preview (file:// cannot load the modules or the data)
+    NODE_PATH=~/.local/share/pnpm/global/5/.pnpm/playwright@1.51.0/node_modules node tests/e2e/page.e2e.cjs   # careless-player browser test
 
 - `site/js/match.js` and `site/js/validate.js` port `Core/NameMatcher` and `Core/BuildValidator`; `tests/vectors/` run against both. Change the C# side first, then the vectors, then the port.
 - `site/data/vocabulary.json` is generated from `Core/Vocabulary` (`UPDATE_VOCABULARY=1` on the unit tests).

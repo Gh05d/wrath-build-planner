@@ -52,3 +52,10 @@ test("pick object keys stay case-sensitive, as the mod's PickEntryConverter is",
   const { build } = canonicalize({ format: 1, name: 'x', levels: [{ level: 1, class: 'Fighter', picks: [{ In: 'Feat', pick: 'Dodge' }] }] });
   assert.ok(validate(build, { vocab, known: null }).some(i => i.structure));
 });
+
+test('a field on the wrong level says where it belongs', () => {
+  const [e] = validate({ format: 1, name: 'x', feats: ['Dodge'], levels: [{ level: 1, class: 'Fighter' }] }, { vocab, known: null });
+  assert.match(e.message, /"picks" goes inside each entry of "levels"/);
+  const [r] = validate({ format: 1, name: 'x', race: 'Human', levels: [{ level: 1, class: 'Fighter' }] }, { vocab, known: null });
+  assert.match(r.message, /"race" goes inside "start"/);
+});

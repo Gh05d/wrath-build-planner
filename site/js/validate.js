@@ -53,9 +53,18 @@ function didYouMean(field, allowed) {
   return near && near[0] <= 2 ? near[1] : null;
 }
 
+// A field that is right but on the wrong level ("feats" at the top: picks belong to each level row).
+const BELONGS = { picks: 'inside each entry of "levels"', spells: 'inside each entry of "levels"', class: 'inside each entry of "levels"',
+  level: 'inside each entry of "levels"', race: 'inside "start"', alignment: 'inside "start"', abilityScores: 'inside "start"', path: 'inside an entry of "mythic"' };
+
 function fields(obj, kind, where, issues) {
   for (const f of Object.keys(obj)) {
     if (FIELDS[kind].includes(f)) continue;
+    const target = ALIASES[f] ?? (BELONGS[f] ? f : null);
+    if (target && !FIELDS[kind].includes(target) && BELONGS[target]) {
+      issues.push({ ...error(where, `Field '${f}' is not allowed here: "${target}" goes ${BELONGS[target]}. The mod refuses files with unknown fields.`), structure: true });
+      continue;
+    }
     const hint = didYouMean(f, FIELDS[kind]);
     issues.push({ ...error(where, `Unknown field '${f}'${hint ? ` — did you mean '${hint}'?` : '.'} The mod refuses files with unknown fields.`), structure: true });
   }

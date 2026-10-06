@@ -107,6 +107,7 @@ function tied(where, name, outcome) {
 
 export function checkNames(build, index) {
   if (!index) return [{ error: false, note: true, where: '', message: 'Names were not checked: the name list could not be loaded.' }];
+  suggestionRun = { left: SUGGESTION_BUDGET, cache: new Map() };
   const issues = [];
   if (build.start && !blank(build.start.race)) {
     const o = match(build.start.race, index.races);
@@ -243,8 +244,23 @@ function resolve(name, pages, index) {
     return { kind: 'unique', hits };
   }
   if (tiedOutcome) return { kind: 'ambiguous', outcome: tiedOutcome };
-  // Suggestions are the slow part: computed only when a message needs them.
-  return { kind: 'none', get outcome() { return match(name, candidatesOf(pages, index)); } };
+  // Suggestions are the slow part (~40 ms each on the full list): computed only when a message needs them,
+  // once per name, and for at most SUGGESTION_BUDGET names per check — a nonsense answer must not freeze the page.
+  return { kind: 'none', get outcome() { return suggestOnce(name, pages, index); } };
+}
+
+const SUGGESTION_BUDGET = 20;
+let suggestionRun = { left: SUGGESTION_BUDGET, cache: new Map() };
+
+function suggestOnce(name, pages, index) {
+  const key = `${pages === index.pages ? '*' : pages.map(p => p.cand.display).join('|')}|${normalize(name)}`;
+  if (suggestionRun.cache.has(key)) return suggestionRun.cache.get(key);
+  // resolve() already found no match on any page; without a budget left there is nothing more to compute.
+  const outcome = suggestionRun.left-- > 0
+    ? match(name, candidatesOf(pages, index))
+    : { kind: 'none', match: null, tied: [], suggestions: [] };
+  suggestionRun.cache.set(key, outcome);
+  return outcome;
 }
 
 function checkChain(pick, pages, at, index, issues) {
