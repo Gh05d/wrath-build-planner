@@ -45,8 +45,7 @@ The Builds window links to the page ("Create a build with ChatGPT or Claude…")
 - Class, race, starting ability scores and alignment are always set from the build, even if you had
   chosen something else. Everything else is only filled where nothing is chosen yet.
 - Write names in English or in your game's language; English names also work when the game runs in
-  another language. Exception: choices inside a feat (the weapon for Weapon Focus) are only known by
-  the name your game shows.
+  another language.
 - Using AutoLevelUp as well? Give a companion a build in one of the two mods, not in both.
 
 - If you pick or change a feat by hand after applying, the game resets that level's spell choices.

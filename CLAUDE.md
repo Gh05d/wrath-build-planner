@@ -39,7 +39,9 @@ In-game tests: skill `testing-mods-in-game`, scripts in `tests/ingame/`.
 - **Paste under Proton (2026-10-06):** an LLM-style answer (prose + ```json block) put into the Deck's X clipboard by another process (`python3` tkinter on `DISPLAY=:1`, the game's display) was imported by "Paste from clipboard".
 - **Escape in the Builds window (2026-10-06):** routed through `Game.Instance.UI.EscManager` (newest subscriber only). The own key check let the level-up underneath ask to discard the player's choices; a static-method subscription broke Escape game-wide (`IsBad` calls `Target.Equals`). `careless.sh` covers it.
 - **DevBridge/xdotool for key tests:** the first synthetic key after a hook call only focuses the window; `xdotool key ctrl+p` lands in one frame (Unity sees Ctrl released) — hold Ctrl with keydown/keyup and pauses. Bridge values end in `\r`.
-- **Not verified**: 16:9 layout, spontaneous casters swapping spells, the game running in a language other than English.
+- **16:9 (2026-10-06):** at 1280x720 (`Screen.SetResolution`, same ratio as 1920x1080) bar, result panel and Builds window fit in creation and level-up; the bar sits on the book's bottom edge without covering content.
+- **German game (2026-10-06):** with `settings.game.main.locale` = deDE in `general_settings.json` (setting `LocalizationManager.CurrentLocale` directly is not enough: its getter reads the setting), English builds apply completely: example build in creation 12/0, wizard level-up 9/0. Page titles map back (Schule=School, Arkane Verbindung=Arcane Bond, Gegensätzliche Schule=Opposition School). Parameter values (Weapon Focus > Greatsword) needed `GameNames.ParamNames` (enum and blueprint names).
+- **Not verified**: spontaneous casters swapping spells.
 
 ## Authoring page (`site/`)
 
