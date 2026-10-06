@@ -31,12 +31,37 @@ namespace WrathBuildPlanner.UI {
 
         public static bool IsOpen => overlay != null;
 
+        // The game hands Escape to the newest subscriber only (EscHotkeyManager.OnEscPressed, IL 2026-10-06). Without a
+        // subscription the level-up window under ours got the key too and asked to discard the player's choices.
+        static IDisposable escSubscription;
+
+        // EscHotkeyManager.IsBad calls action.Target.Equals(null) on every Escape: a static method's delegate has no
+        // target and throws, which broke Escape in the whole game while the window was open (in-game 2026-10-06).
+        // An instance method on a plain object keeps Target non-null.
+        sealed class EscTarget {
+            public void Close() => BuildsWindow.Close();
+        }
+        static readonly EscTarget escTarget = new EscTarget();
+
+        /// <summary>True while the game routes Escape to this window; PlannerController handles the key otherwise.</summary>
+        public static bool EscRoutedByGame => escSubscription != null;
+
         public static void Toggle() {
             if (IsOpen) Close();
             else Open();
         }
 
+        /// <summary>Called every frame: a window destroyed with its canvas (area change) must not keep Escape.</summary>
+        public static void ReleaseEscIfGone() {
+            if (escSubscription != null && overlay == null) {
+                escSubscription.Dispose();
+                escSubscription = null;
+            }
+        }
+
         public static void Close() {
+            escSubscription?.Dispose();
+            escSubscription = null;
             if (overlay != null) UnityEngine.Object.Destroy(overlay);
             overlay = null;
         }
@@ -48,6 +73,12 @@ namespace WrathBuildPlanner.UI {
 
             var (root, rootRect) = UIHelpers.Create("WrathBuildPlannerWindow", canvas);
             overlay = root;
+            try {
+                escSubscription = Game.Instance?.UI?.EscManager?.Subscribe(escTarget.Close);
+            } catch (Exception e) {
+                Logging.Log.UI.Warn($"Escape routing unavailable, falling back to own key check: {e.Message}");
+                escSubscription = null;
+            }
             rootRect.FillParent();
             UIHelpers.AddBackground(root, Theme.DimBackdrop);
             root.AddComponent<Button>().onClick.AddListener(Close);

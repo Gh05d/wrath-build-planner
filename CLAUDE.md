@@ -37,6 +37,8 @@ In-game tests: skill `testing-mods-in-game`, scripts in `tests/ingame/`.
 - **Authoring page acceptance (2026-10-06):** two forum guides and one design request through Haiku and Sonnet: no format errors, every checker suggestion right, clean after at most one fix round; Sonnet builds applied in creation and a level-up with nothing open beyond what the guide leaves open; Haiku dropped two correct feats in its fix round instead of taking the suggested names (fix-request wording) (`docs/superpowers/specs/2026-10-04-wrath-build-planner-authoring-acceptance.md`).
 - **Mercenary creation (2026-10-06):** opened on the fixture through `Player.CreateCustomCompanion()` (`mercenary.sh`). A mercenary starts with a race preselected, and `SelectRace.Apply` sets `LevelUpState.CanSelectRace` to false once any race is chosen — `RaceStep` therefore no longer checks that flag; `LevelUpController.SelectRace` removes the old choice first, like the race page. Mercenaries get 20 point-buy points (main character 25), and the game keeps Next disabled until all points are spent; the page checks both. The assignment made during creation is bound to the new unit.
 - **Paste under Proton (2026-10-06):** an LLM-style answer (prose + ```json block) put into the Deck's X clipboard by another process (`python3` tkinter on `DISPLAY=:1`, the game's display) was imported by "Paste from clipboard".
+- **Escape in the Builds window (2026-10-06):** routed through `Game.Instance.UI.EscManager` (newest subscriber only). The own key check let the level-up underneath ask to discard the player's choices; a static-method subscription broke Escape game-wide (`IsBad` calls `Target.Equals`). `careless.sh` covers it.
+- **DevBridge/xdotool for key tests:** the first synthetic key after a hook call only focuses the window; `xdotool key ctrl+p` lands in one frame (Unity sees Ctrl released) — hold Ctrl with keydown/keyup and pauses. Bridge values end in `\r`.
 - **Not verified**: 16:9 layout, spontaneous casters swapping spells, the game running in a language other than English.
 
 ## Authoring page (`site/`)
@@ -59,7 +61,7 @@ Spec: `pathfinder-mods/docs/superpowers/specs/2026-10-04-wrath-build-planner-aut
 
 ## In-game tests
 
-    bash tests/ingame/all.sh          # guards, multiclass, mythic, extras, chargen, example, mercenary — restarts the game per script
+    bash tests/ingame/all.sh          # guards, multiclass, mythic, extras, chargen, example, mercenary, careless — restarts the game per script
 
 Scripts assert on the English result text: game language English, mod language `auto`.
 `Engine/TestHooks.cs` holds the static entry points the scripts call through DevBridge.

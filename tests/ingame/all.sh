@@ -3,7 +3,7 @@
 cd "$(dirname "$0")"
 BRIDGE="../../../dev-bridge"
 status=0
-for script in guards.sh multiclass.sh mythic.sh extras.sh chargen.sh example.sh mercenary.sh; do
+for script in guards.sh multiclass.sh mythic.sh extras.sh chargen.sh example.sh mercenary.sh careless.sh; do
   echo "=================== $script"
   bash "$BRIDGE/bridge.sh" quit >/dev/null 2>&1
   bash "$BRIDGE/launch.sh" || { echo "FAIL launch before $script"; status=1; continue; }

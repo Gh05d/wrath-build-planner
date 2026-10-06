@@ -62,6 +62,7 @@ namespace WrathBuildPlanner.UI {
                 SyncBar();
                 SyncPage();
                 SyncHudButton();
+                BuildsWindow.ReleaseEscIfGone();
                 HandleKeys();
                 if (jumpInFrames > 0 && --jumpInFrames == 0) JumpNow();
             } catch (Exception e) {
@@ -123,7 +124,7 @@ namespace WrathBuildPlanner.UI {
         }
 
         void HandleKeys() {
-            if (BuildsWindow.IsOpen && Input.GetKeyDown(KeyCode.Escape)) {
+            if (BuildsWindow.IsOpen && !BuildsWindow.EscRoutedByGame && Input.GetKeyDown(KeyCode.Escape)) {
                 BuildsWindow.Close();
                 Input.ResetInputAxes();
                 return;
