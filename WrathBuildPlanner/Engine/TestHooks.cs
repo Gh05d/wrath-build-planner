@@ -121,6 +121,9 @@ namespace WrathBuildPlanner.Engine {
             }));
         }
 
+        /// <summary>Writes names.json into the mod folder for tools/export-names.sh. English game only.</summary>
+        static string ExportNames() => NameExport.Write(Path.Combine(Main.ModPath, "names.json"));
+
         static string ToggleWindow() {
             UI.BuildsWindow.Toggle();
             return UI.BuildsWindow.IsOpen ? "open" : "closed";
