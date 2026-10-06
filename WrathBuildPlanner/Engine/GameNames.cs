@@ -78,16 +78,13 @@ namespace WrathBuildPlanner.Engine {
         /// <summary>
         /// English identities of a parameter value (the weapon of Weapon Focus, a school, a skill, a spell): the display
         /// name is in the game's language, so "Greatsword" failed in a German game (Deck, 2026-10-06). The enum names
-        /// are English ("Greatsword", "Evocation"; skills without their "Skill" prefix); a blueprint brings its English name.
+        /// are English ("Greatsword", "Evocation"; see Vocabulary.EnumMemberNames); a blueprint brings its English name.
         /// </summary>
         static string[] ParamNames(FeatureParam param) {
             var names = new List<string>();
-            if (param.WeaponCategory.HasValue) names.Add(param.WeaponCategory.Value.ToString());
-            if (param.SpellSchool.HasValue) names.Add(param.SpellSchool.Value.ToString());
-            if (param.StatType.HasValue) {
-                string stat = param.StatType.Value.ToString();
-                names.Add(stat.StartsWith("Skill") ? stat.Substring(5) : stat);
-            }
+            if (param.WeaponCategory.HasValue) names.AddRange(Vocabulary.EnumMemberNames(param.WeaponCategory.Value.ToString()));
+            if (param.SpellSchool.HasValue) names.AddRange(Vocabulary.EnumMemberNames(param.SpellSchool.Value.ToString()));
+            if (param.StatType.HasValue) names.AddRange(Vocabulary.EnumMemberNames(param.StatType.Value.ToString()));
             if (param.Blueprint is BlueprintUnitFact fact) names.Add(English(fact.m_DisplayName));
             if (param.Blueprint != null) names.Add(param.Blueprint.name);
             return names.ToArray();

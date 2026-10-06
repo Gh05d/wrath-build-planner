@@ -57,6 +57,23 @@ namespace WrathBuildPlanner.Core {
             foreach (string spelling in spellings) AlignmentNames[NameMatcher.Normalize(spelling)] = canonical;
         }
 
+        /// <summary>
+        /// English names for a game enum member that names a feat's further choice (WeaponCategory, SpellSchool,
+        /// StatType): the member itself, a skill's names as the game shows them ("SkillThievery" is "Trickery"),
+        /// and the member without its "Skill" or "Weapon" prefix ("WeaponHeavyShield" is "Heavy Shield").
+        /// </summary>
+        public static string[] EnumMemberNames(string member) {
+            if (string.IsNullOrEmpty(member)) return new string[0];
+            var names = new List<string> { member };
+            foreach (var skill in skillList) {
+                if (skill.Key == member) names.AddRange(skill.Value);
+            }
+            foreach (string prefix in new[] { "Skill", "Weapon" }) {
+                if (member.Length > prefix.Length && member.StartsWith(prefix)) names.Add(member.Substring(prefix.Length));
+            }
+            return names.ToArray();
+        }
+
         public static bool TryAttribute(string text, out string canonical) =>
             AttributeNames.TryGetValue(NameMatcher.Normalize(text), out canonical);
 

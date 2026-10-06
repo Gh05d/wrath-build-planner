@@ -169,13 +169,6 @@ namespace WrathBuildPlanner.UI {
         }
 
 
-        /// <summary>
-        /// Walks the window forward to the first page that needs the player, or to the summary if none does.
-        /// A page only knows whether it is complete once it has been shown, and later pages unlock as earlier
-        /// ones complete — so the pages are stepped through one by one, a few frames apart, the same way
-        /// pressing Next would. The walk stops on pages that are the player's own business (portrait,
-        /// appearance, voice, name) even if the game considers them complete by default.
-        /// </summary>
         Action later;
         int laterInFrames;
         public bool HasPendingAction => later != null;
@@ -186,6 +179,13 @@ namespace WrathBuildPlanner.UI {
             laterInFrames = Math.Max(1, frames);
         }
 
+        /// <summary>
+        /// Walks the window forward to the first page that needs the player, or to the summary if none does.
+        /// A page only knows whether it is complete once it has been shown, and later pages unlock as earlier
+        /// ones complete — so the pages are stepped through one by one, a few frames apart, the same way
+        /// pressing Next would. The walk stops on pages that are the player's own business (portrait,
+        /// appearance, voice, name) even if the game considers them complete by default.
+        /// </summary>
         public void JumpToFirstOpenPage() {
             walkSteps = MaxWalkSteps;
             jumpInFrames = JumpDelayFrames;

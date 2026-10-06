@@ -5,7 +5,8 @@
 //   node site/check.mjs <answer.txt|build.json|-> [--out <file.json>] [--json]
 //
 // The input may be the AI's whole answer; the build is found in it. Exit code 0: no errors and no warnings;
-// 1: errors or warnings — the fix request for the AI is printed; 2: usage or unreadable input.
+// 1: errors or warnings — the fix request for the AI is printed (none when the input holds no build at all);
+// 2: usage, unreadable input or --out not writable.
 // --out writes the build once there are no errors, as the page's Copy JSON does: unknown names are only warnings
 // because content from other mods is not in the name list. --json prints the result as JSON instead of text.
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -48,7 +49,14 @@ const result = checkText(text, { vocab, index: indexNames(names) });
 const clean = result.ok && !result.issues.some(i => !i.error && !i.note);
 const fix = result.canFix ? fixRequest(result.issues) : null;
 
-if (out && result.ok) writeFileSync(out, result.clean + '\n');
+if (out && result.ok) {
+  try {
+    writeFileSync(out, result.clean + '\n');
+  } catch (e) {
+    console.error(`cannot write ${out}: ${e.message}`);
+    process.exit(2);
+  }
+}
 
 if (asJson) {
   const { summary, ok, issues, build } = result;

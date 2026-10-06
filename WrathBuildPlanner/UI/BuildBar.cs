@@ -305,6 +305,8 @@ namespace WrathBuildPlanner.UI {
         }
 
         public void Apply() {
+            // A press while the deferred Apply below is waiting would run it twice, mid page switch.
+            if (PlannerController.Instance?.HasPendingAction == true) return;
             // A second creation in one session opens on the portrait page while the premade character is still set.
             // Leaving the premade there rebuilds the page list under the shown page and leaves it blank (Deck,
             // 2026-10-06). Show the premade page first, as a player clicking "Custom character" would, then apply.

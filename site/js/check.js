@@ -23,7 +23,7 @@ export function checkText(text, { vocab, index }) {
   if (!issues.some(i => i.structure)) issues.push(...checkPointBuy(build), ...checkNames(build, index));
   result.build = build;
   result.clean = JSON.stringify(build, null, 2);
-  return finish(result, issues, summary(build, issues));
+  return finish(result, issues, summary(build, issues, !!vocab && !!index));
 }
 
 function finish(result, issues, summaryText) {
@@ -34,7 +34,7 @@ function finish(result, issues, summaryText) {
   return result;
 }
 
-function summary(build, issues) {
+function summary(build, issues, checked) {
   const levels = (build.levels ?? []).filter(Boolean).map(r => Number(r.level)).filter(Number.isFinite);
   const picks = [...(build.levels ?? []), ...(build.mythic ?? [])].filter(Boolean).reduce((n, r) => n + (r.picks?.length ?? 0), 0);
   const errors = issues.filter(i => i.error).length;
@@ -44,6 +44,6 @@ function summary(build, issues) {
   const n = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
   const notes = issues.filter(i => i.note).length;
   // Notes are listed apart from the problems; say plainly that they leave the build ready.
-  const verdict = errors || warnings ? '.' : ` — ready for the game.${notes ? ` ${n(notes, 'note')} below, nothing to fix.` : ''}`;
+  const verdict = errors || warnings ? '.' : !checked ? ' — names and fields not checked (the page data did not load).' : ` — ready for the game.${notes ? ` ${n(notes, 'note')} below, nothing to fix.` : ''}`;
   return `${build.name ?? 'Unnamed build'}: ${range}${mythic ? `, ${n(mythic, 'mythic rank')}` : ''}, ${n(picks, 'pick')} — ${n(errors, 'error')}, ${n(warnings, 'warning')}${verdict}`;
 }

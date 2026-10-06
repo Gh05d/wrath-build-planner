@@ -8,7 +8,7 @@ The page https://gh05d.github.io/wrath-build-planner/ does the same for people; 
 - [prompt-design.txt](https://gh05d.github.io/wrath-build-planner/prompt-design.txt): the same prompt for designing a build from a description instead of a guide.
 - [check.mjs](https://github.com/Gh05d/wrath-build-planner/blob/master/site/check.mjs): the page's checker for Node 18+. It needs the files next to it, so clone the repository (below).
 - [names.json](https://gh05d.github.io/wrath-build-planner/data/names.json): every name the game offers, per level-up page (1.6 MB; check.mjs reads it for you).
-- [Format reference and example build](https://github.com/Gh05d/wrath-build-planner/blob/master/Builds-examples/two-handed-fighter.json)
+- [Example build](https://github.com/Gh05d/wrath-build-planner/blob/master/Builds-examples/two-handed-fighter.json): a complete file; the field reference is the FIELDS section of prompt.txt.
 
 ## Steps
 
@@ -19,7 +19,7 @@ The page https://gh05d.github.io/wrath-build-planner/ does the same for people; 
        git clone --depth 1 https://github.com/Gh05d/wrath-build-planner
        node wrath-build-planner/site/check.mjs answer.txt --out my-build.json
 
-   The input may be your whole answer or the bare JSON (`-` reads stdin, `--json` prints a machine-readable result). Exit code 0: no errors and no warnings. Exit code 1: it prints a "fix request" listing each problem, with similar names from the game; apply it and check again until the exit code is 0 (leave out what you cannot match — a missing pick stays open for the player, a wrong one is worse). Notes need no action: they mark what the guide leaves to the player (a weapon choice, a pick without a page). `--out` writes the clean build as soon as there are no errors. Prerequisites, free spell slots and whether a page appears on a level are only checked in the game.
+   The input may be your whole answer or the bare JSON (`-` reads stdin, `--json` prints a machine-readable result). Exit code 0: no errors and no warnings. Exit code 1: it prints a "fix request" listing each problem, with similar names from the game; apply it and check again until the exit code is 0 (leave out what you cannot match — a missing pick stays open for the player, a wrong one is worse). Exit code 1 without a fix request: no build was found in the input (or it was the prompt itself). Exit code 2: wrong arguments, an unreadable input file or an `--out` path that cannot be written. Notes need no action: they mark what the guide leaves to the player (a weapon choice, a pick without a page). `--out` writes the clean build as soon as there are no errors. Prerequisites, free spell slots and whether a page appears on a level are only checked in the game.
 4. Save the file into the mod's Builds folder: `<game folder>/Mods/WrathBuildPlanner/Builds/<short-name>.json`. The game folder is the one that contains `Wrath.exe`; default Steam locations:
    - Windows: `C:\Program Files (x86)\Steam\steamapps\common\Pathfinder Second Adventure\`
    - Linux / Steam Deck: `~/.local/share/Steam/steamapps/common/Pathfinder Second Adventure/` (or `steamapps/common/` on an SD card or other Steam library)

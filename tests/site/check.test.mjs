@@ -35,6 +35,12 @@ test('with a warning the summary does not say ready', () => {
   assert.doesNotMatch(r.summary, /ready/);
 });
 
+test('names or vocabulary not loaded: never "ready" (nothing was checked)', () => {
+  const r = checkText(JSON.stringify({ format: 1, name: 'x', levels: [{ level: 1, class: 'Fighter' }] }), { vocab: null, index: null });
+  assert.doesNotMatch(r.summary, /ready/);
+  assert.match(r.summary, /not checked/);
+});
+
 test('nothing pasted: no summary, nothing to fix', () => {
   const r = checkText('  ', { vocab, index });
   assert.equal(r.ok, false);
@@ -104,6 +110,23 @@ test('CLI: --out is not written when the build has errors', () => {
   const out = join(tmp, 'never.json');
   cli(['-', '--out', out], '{"format":1}');
   assert.throws(() => readFileSync(out));
+});
+
+test('CLI: --out into a folder that does not exist: a message and exit 2, no stack trace', () => {
+  const r = cli(['-', '--out', join(tmp, 'missing', 'x.json')], EXAMPLE);
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /cannot write/);
+  assert.doesNotMatch(r.stderr, /at .*\(/);
+});
+
+test('CLI: the modules load as ES modules on any Node (site/package.json says so; Node 18 and 20 < 20.19 do not detect it)', () => {
+  assert.equal(JSON.parse(readFileSync(path('../../site/package.json'), 'utf8')).type, 'module');
+});
+
+test('llms.txt explains every exit code of check.mjs', () => {
+  const llms = readFileSync(path('../../site/llms.txt'), 'utf8');
+  assert.match(llms, /Exit code 2/);
+  assert.match(llms, /without a fix request/);
 });
 
 test('CLI: no arguments prints the usage and exits 2', () => {
