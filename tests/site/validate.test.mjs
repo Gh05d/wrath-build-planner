@@ -14,7 +14,7 @@ const known = {
 
 for (const c of vectors.cases) {
   test(`vector: ${c.name}`, () => {
-    const issues = validate(c.build, { vocab, known });
+    const issues = validate(canonicalize(c.build).build, { vocab, known });   // as the page does
     if (c.parse === 'error') {
       assert.ok(issues.some(i => i.error && i.structure), JSON.stringify(issues));
       return;

@@ -585,6 +585,45 @@
           "message": "Mythic ranks must be in ascending order; rank 1 comes after rank 2."
         }
       ]
+    },
+    {
+      "name": "field names in another case",
+      "parse": "ok",
+      "build": {
+        "Format": 1,
+        "Name": "x",
+        "Levels": [
+          {
+            "Level": 1,
+            "Class": "Fighter",
+            "Picks": [
+              "Dodge"
+            ]
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "name": "pick keys are case-sensitive",
+      "parse": "error",
+      "build": {
+        "format": 1,
+        "name": "x",
+        "levels": [
+          {
+            "level": 1,
+            "class": "Fighter",
+            "picks": [
+              {
+                "In": "Feat",
+                "pick": "Dodge"
+              }
+            ]
+          }
+        ]
+      },
+      "issues": []
     }
   ]
 }
