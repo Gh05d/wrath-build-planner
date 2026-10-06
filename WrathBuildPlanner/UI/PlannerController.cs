@@ -65,6 +65,11 @@ namespace WrathBuildPlanner.UI {
                 BuildsWindow.ReleaseEscIfGone();
                 HandleKeys();
                 if (jumpInFrames > 0 && --jumpInFrames == 0) JumpNow();
+                if (laterInFrames > 0 && --laterInFrames == 0) {
+                    var action = later;
+                    later = null;
+                    action?.Invoke();
+                }
             } catch (Exception e) {
                 Log.UI.Error(e, "build bar sync failed");
             }
@@ -171,6 +176,16 @@ namespace WrathBuildPlanner.UI {
         /// pressing Next would. The walk stops on pages that are the player's own business (portrait,
         /// appearance, voice, name) even if the game considers them complete by default.
         /// </summary>
+        Action later;
+        int laterInFrames;
+        public bool HasPendingAction => later != null;
+
+        /// <summary>Runs an action a few frames from now (one pending action; a newer one replaces it).</summary>
+        public void RunLater(Action action, int frames) {
+            later = action;
+            laterInFrames = Math.Max(1, frames);
+        }
+
         public void JumpToFirstOpenPage() {
             walkSteps = MaxWalkSteps;
             jumpInFrames = JumpDelayFrames;

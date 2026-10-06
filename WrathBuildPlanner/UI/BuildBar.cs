@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Kingmaker.UI.MVVM._PCView.CharGen;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases.Pregen;
 using Kingmaker.UnitLogic.Class.LevelUp;
 using TMPro;
 using UnityEngine;
@@ -304,6 +305,24 @@ namespace WrathBuildPlanner.UI {
         }
 
         public void Apply() {
+            // A second creation in one session opens on the portrait page while the premade character is still set.
+            // Leaving the premade there rebuilds the page list under the shown page and leaves it blank (Deck,
+            // 2026-10-06). Show the premade page first, as a player clicking "Custom character" would, then apply.
+            var window = WindowTracker.Window;
+            if (window != null && WindowTracker.Controller?.State?.IsPregen == true && PlannerController.Instance != null) {
+                var pregen = window.m_PhasesList.OfType<CharGenPregenPhaseVM>().FirstOrDefault();
+                if (pregen != null && window.CurrentPhaseVM.Value != pregen && window.PhasesSelectionGroupRadioVM.TrySelectEntity(pregen)) {
+                    PlannerController.Instance.RunLater(ApplyNow, PregenPageFrames);
+                    return;
+                }
+            }
+            ApplyNow();
+        }
+
+        const int PregenPageFrames = 20;
+
+        void ApplyNow() {
+            if (root == null) return;   // the window closed in between
             // The usual loop is "fix the file, press Apply again": always work from what is on disk now.
             Main.Library.Reload();
             var entry = Assigned(out _);

@@ -21,9 +21,12 @@ echo "--- example build, level 1"
 bridge 'wait 2' >/dev/null
 enter_creation
 bridge 'invoke WrathBuildPlanner.Engine.TestHooks.Assign two-handed-fighter.json' >/dev/null
-out=$(bridge 'invoke WrathBuildPlanner.Engine.TestHooks.PressApply' | sed -n 's/^returned //p')
+out=$(press_apply)
 echo "$out"
 expect "$out" ', 0 open' 'example build applies completely at level 1'
+# A second creation in the session opens on the portrait page with the premade still set (2026-10-06: blank page).
+bridge 'wait 2' >/dev/null
+page_not_blank example-after-apply 'the page shown after Apply is not blank'
 expect "$out" 'Archetype: Two-Handed Fighter' 'archetype in the example'
 expect "$out" 'Weapon Focus > Greatsword' 'chain in the example'
 

@@ -101,7 +101,9 @@ namespace WrathBuildPlanner.Engine {
         static string PressApply() {
             var bar = UI.PlannerController.Instance?.Bar;
             if (bar == null) return "NO BAR";
+            var before = bar.LastReport;
             bar.Apply();
+            if (bar.LastReport == before && UI.PlannerController.Instance?.HasPendingAction == true) return "DEFERRED (read the result with BarText)";
             return bar.LastReport == null ? "NO REPORT" : UI.BuildBar.Render(bar.LastReport).Replace("\n", " || ");
         }
 

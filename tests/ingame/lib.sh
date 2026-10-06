@@ -62,3 +62,25 @@ load_fixture() {
 open_levelup() {
   bridge "invoke $MC.Progression.GainExperience $1" 'wait 2' 'clickpath PartyCharacterView_01/Buttons/LevelUp' 'wait 4' >/dev/null
 }
+
+# press_apply — Apply through the bar; when the bar first shows the premade page (second creation in a session),
+# the result comes a few frames later and is read from the details panel.
+press_apply() {
+  local out
+  out=$(bridge 'invoke WrathBuildPlanner.Engine.TestHooks.PressApply' | sed -n 's/^returned //p')
+  if grep -q '^DEFERRED' <<<"$out"; then
+    out=$(bridge 'wait 2' 'invoke WrathBuildPlanner.Engine.TestHooks.BarText' | sed -n 's/^returned //p' | sed 's/^.*details([^)]*)=//')
+  fi
+  echo "$out"
+}
+
+# page_not_blank <shot name> <what> — the book area of a screenshot must show content, not bare parchment.
+page_not_blank() {
+  bridge "shot $1" >/dev/null
+  local sd
+  sd=$(python3 -c "
+from PIL import Image, ImageStat
+im = Image.open('$BRIDGE_DIR/shots/$1.png').convert('L').crop((60, 130, 820, 700))
+print(int(ImageStat.Stat(im).stddev[0]))")
+  if [ "$sd" -ge 25 ]; then echo "PASS $2 (contrast $sd)"; else echo "FAIL $2 — page looks blank (contrast $sd)"; FAILED=1; fi
+}
