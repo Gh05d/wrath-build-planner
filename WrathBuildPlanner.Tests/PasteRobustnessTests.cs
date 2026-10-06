@@ -58,6 +58,15 @@ namespace WrathBuildPlanner.Tests {
         }
 
         [Fact]
+        public void ThePromptIsNotABuild() {
+            // The prompt carries an example build; pasted into the game by mistake it must not import that example.
+            string prompt = "You convert character builds for Pathfinder: Wrath of the Righteous into a file for the mod \"Wrath Build Planner\".\n\nEXAMPLE\n" + Json + "\n\n[paste the guide here]";
+            var result = BuildParser.Parse(prompt);
+            Assert.False(result.Ok);
+            Assert.Contains(result.Issues, i => i.Message.Contains("prompt"));
+        }
+
+        [Fact]
         public void NoJsonAtAll() {
             var result = BuildParser.Parse("Level 1: Fighter, Power Attack. Level 2: Cleave.");
             Assert.False(result.Ok);

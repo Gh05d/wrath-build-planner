@@ -47,6 +47,7 @@
   "msg.import.bad_json": "Kein gültiges JSON in Zeile {0}, Position {1}: {2}",
   "msg.import.bad_structure": "Der Aufbau des Builds stimmt nicht: {0}",
   "msg.import.at": "{0} (Zeile {1}, Position {2})",
+  "msg.import.prompt": "Das ist der Prompt von der Build-Seite, nicht die Antwort der KI. Füge den Prompt in deine KI ein und dann deren Antwort hier.",
   "msg.import.smart_quotes": "Der Text enthält typografische Anführungszeichen (“ ”), JSON braucht gerade (\").",
   "msg.import.unreadable": "Die Datei konnte nicht gelesen werden: {0}",
   "msg.import.not_stored": "Der Build konnte nicht gespeichert werden: {0}",

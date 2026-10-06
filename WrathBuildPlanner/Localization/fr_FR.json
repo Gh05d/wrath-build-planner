@@ -47,6 +47,7 @@
   "msg.import.bad_json": "JSON invalide à la ligne {0}, position {1} : {2}",
   "msg.import.bad_structure": "La structure du build est incorrecte : {0}",
   "msg.import.at": "{0} (ligne {1}, position {2})",
+  "msg.import.prompt": "C’est le prompt de la page des builds, pas la réponse de l’IA. Colle le prompt dans ton IA, puis colle sa réponse ici.",
   "msg.import.smart_quotes": "Le texte contient des guillemets typographiques (“ ”) ; le JSON exige des guillemets droits (\").",
   "msg.import.unreadable": "Le fichier n'a pas pu être lu : {0}",
   "msg.import.not_stored": "Le build n'a pas pu être enregistré : {0}",

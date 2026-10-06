@@ -47,6 +47,7 @@
   "msg.import.bad_json": "第 {0} 行第 {1} 位不是有效的 JSON：{2}",
   "msg.import.bad_structure": "构筑的结构有误：{0}",
   "msg.import.at": "{0}（第 {1} 行，第 {2} 位）",
+  "msg.import.prompt": "这是构筑页面的提示词，不是 AI 的回答。请把提示词粘贴给 AI，再把它的回答粘贴到这里。",
   "msg.import.smart_quotes": "文本使用了排版引号（“ ”），JSON 需要直引号（\"）。",
   "msg.import.unreadable": "无法读取文件：{0}",
   "msg.import.not_stored": "无法保存构筑：{0}",

@@ -32,6 +32,12 @@ namespace WrathBuildPlanner.Core {
 
         public static ParseResult Parse(string text) {
             var result = new ParseResult();
+            // The build page's prompt (site/js/prompt.js PROMPT_START) holds an example build: never import that.
+            if (text != null && text.IndexOf(PromptStart, StringComparison.Ordinal) >= 0) {
+                result.CleanText = "";
+                result.Issues.Add(ImportIssue.Error("file", Messages.Get("import.prompt")));
+                return result;
+            }
             string json = Clean(text);
             result.CleanText = json;
             if (json.Length == 0) {
@@ -75,6 +81,7 @@ namespace WrathBuildPlanner.Core {
             }
         }
 
+        const string PromptStart = "You convert character builds for Pathfinder: Wrath of the Righteous into a file for the mod";
         static readonly char[] TypographicQuotes = { '\u201C', '\u201D', '\u201E' };
         static readonly Regex Fence = new Regex("```([^\\n`]*)\\n(.*?)```", RegexOptions.Singleline);
 

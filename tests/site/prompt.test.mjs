@@ -54,3 +54,9 @@ test('the example in the prompt passes the checker', () => {
   const issues = [...validate(r.value, { vocab, known: null }), ...checkNames(r.value, indexNames(names))];
   assert.deepEqual(issues, []);
 });
+
+test('the mod recognises the same prompt start as the page (BuildParser.PromptStart)', () => {
+  const cs = readFileSync(new URL('../../WrathBuildPlanner/Core/BuildParser.cs', import.meta.url), 'utf8');
+  const start = /const string PromptStart = "([^"]+)";/.exec(cs)[1];
+  assert.ok(buildPrompt(names, vocab, 'guide').startsWith(start));
+});
