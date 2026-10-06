@@ -1,0 +1,24 @@
+{
+  "meta": { "gameVersion": "test", "exported": "2026-10-04", "modVersion": "test" },
+  "races": [["Human", "HumanRace"], ["Elf", "ElfRace"]],
+  "classes": [
+    { "n": ["Fighter", "FighterClass"], "archetypes": [["Two-Handed Fighter", "TwoHandedFighterArchetype"]], "spells": [] },
+    { "n": ["Wizard", "WizardClass"], "archetypes": [], "spells": ["s1", "s2"] }
+  ],
+  "mythicPaths": [["Angel", "MythicAngelClass"], ["Lich", "MythicLichClass"]],
+  "features": {
+    "f1": { "n": ["Power Attack", "PowerAttackFeature"] },
+    "f2": { "n": ["Weapon Focus", "WeaponFocus"], "params": [["Greatsword"], ["Longsword"]] },
+    "f3": { "n": ["Dodge", "Dodge"] },
+    "f4": { "n": ["Warrior", "BackgroundsWarriorSelection"], "sub": ["f5"] },
+    "f5": { "n": ["Gladiator", "BackgroundGladiator"] }
+  },
+  "spells": { "s1": ["Magic Missile", "MagicMissile"], "s2": ["Grease", "Grease"] },
+  "pages": [
+    { "n": ["Feat", "Feat", "BasicFeatSelection"], "items": ["f1", "f2", "f3"] },
+    { "n": ["Bonus Combat Feat", "Combat Feat", "FighterFeatSelection"], "items": ["f1", "f2"] },
+    { "n": ["Background Selection", "Background", "BackgroundsBaseSelection"], "items": ["f4"] },
+    { "n": ["Bonus Combat Feat", "LichSkeletalCombatParametrized"], "params": [["Weapon Focus"], ["Dodge"]] },
+    { "n": ["InternalOnlySelection"], "items": ["f1"] }
+  ]
+}

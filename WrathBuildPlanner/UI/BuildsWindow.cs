@@ -80,7 +80,20 @@ namespace WrathBuildPlanner.UI {
             partyList = Column(Place(sheet, "Party", 60f, -160f, 640f, 620f));
 
             Widgets.InkLabel(Place(sheet, "LibraryHeader", 750f, -112f, 690f, 40f), "window.library".i18n(), HeaderFont).fontStyle = FontStyles.Bold;
-            libraryList = Column(Place(sheet, "Library", 750f, -160f, 690f, 530f));
+            libraryList = Column(Place(sheet, "Library", 750f, -160f, 690f, 490f));
+            // Opening a URL under Proton may not show a browser: the address also goes to the clipboard.
+            var link = Widgets.InlineLink(Place(sheet, "AiLink", 750f, -660f, 690f, 40f).transform, "Link", "window.ai".i18n(), () => {
+                GUIUtility.systemCopyBuffer = Main.AuthoringUrl;
+                Application.OpenURL(Main.AuthoringUrl);
+                Say(Strings.Format("window.ai_opened", Main.AuthoringUrl));
+            }, fontSize: RowFont);
+            // The link sizes itself through its LayoutElement; this box has no layout group, so pin it left.
+            var linkRect = link.Rect();
+            linkRect.anchorMin = new Vector2(0f, 0f);
+            linkRect.anchorMax = new Vector2(0f, 1f);
+            linkRect.pivot = new Vector2(0f, 0.5f);
+            linkRect.anchoredPosition = Vector2.zero;
+            linkRect.sizeDelta = new Vector2(link.GetComponent<LayoutElement>().preferredWidth, 0f);
 
             var buttons = Widgets.Row(Place(sheet, "Buttons", 750f, -710f, 690f, 60f).transform, "Row", 54f);
             Stretch(buttons.Rect());

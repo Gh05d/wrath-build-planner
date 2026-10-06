@@ -1,0 +1,95 @@
+{
+  "attributes": [
+    "Strength",
+    "Dexterity",
+    "Constitution",
+    "Intelligence",
+    "Wisdom",
+    "Charisma"
+  ],
+  "skills": {
+    "SkillAthletics": [
+      "Athletics"
+    ],
+    "SkillMobility": [
+      "Mobility"
+    ],
+    "SkillThievery": [
+      "Trickery",
+      "Thievery"
+    ],
+    "SkillStealth": [
+      "Stealth"
+    ],
+    "SkillKnowledgeArcana": [
+      "Knowledge (Arcana)",
+      "Knowledge Arcana",
+      "Arcana"
+    ],
+    "SkillKnowledgeWorld": [
+      "Knowledge (World)",
+      "Knowledge World",
+      "World"
+    ],
+    "SkillLoreNature": [
+      "Lore (Nature)",
+      "Lore Nature",
+      "Nature"
+    ],
+    "SkillLoreReligion": [
+      "Lore (Religion)",
+      "Lore Religion",
+      "Religion"
+    ],
+    "SkillPerception": [
+      "Perception"
+    ],
+    "SkillPersuasion": [
+      "Persuasion"
+    ],
+    "SkillUseMagicDevice": [
+      "Use Magic Device",
+      "UMD"
+    ]
+  },
+  "alignments": {
+    "LawfulGood": [
+      "Lawful Good",
+      "LG"
+    ],
+    "NeutralGood": [
+      "Neutral Good",
+      "NG"
+    ],
+    "ChaoticGood": [
+      "Chaotic Good",
+      "CG"
+    ],
+    "LawfulNeutral": [
+      "Lawful Neutral",
+      "LN"
+    ],
+    "TrueNeutral": [
+      "True Neutral",
+      "Neutral",
+      "TN",
+      "N"
+    ],
+    "ChaoticNeutral": [
+      "Chaotic Neutral",
+      "CN"
+    ],
+    "LawfulEvil": [
+      "Lawful Evil",
+      "LE"
+    ],
+    "NeutralEvil": [
+      "Neutral Evil",
+      "NE"
+    ],
+    "ChaoticEvil": [
+      "Chaotic Evil",
+      "CE"
+    ]
+  }
+}

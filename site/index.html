@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Build Planner Authoring</title>
+  <meta name="description" content="Turn a Pathfinder: Wrath of the Righteous build guide into a Wrath Build Planner file with ChatGPT, Claude or any chat AI.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Source+Sans+3:wght@400;600&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Wrath Build Planner</h1>
+    <p class="lead">Turn a build guide into a file the mod can apply — with ChatGPT, Claude or any other chat AI you already use.</p>
+    <p id="banner" class="banner" hidden></p>
+    <script>
+      // Browsers do not run the page's modules from file://, so app.js cannot say this itself.
+      if (location.protocol === 'file:') {
+        const banner = document.getElementById('banner');
+        banner.textContent = 'This page only works from its web address (or a local web server), not opened as a file.';
+        banner.hidden = false;
+      }
+    </script>
+  </header>
+
+  <main>
+    <section class="step">
+      <h2><span class="num">1</span> Copy the prompt</h2>
+      <div class="switch" role="radiogroup" aria-label="What do you have?">
+        <label><input type="radio" name="variant" value="guide" checked> I have a guide</label>
+        <label><input type="radio" name="variant" value="design"> Design a build for me</label>
+      </div>
+      <button id="copy-prompt" class="primary" disabled>Copy prompt</button>
+      <p id="prompt-note" class="hint" hidden></p>
+      <p class="hint">Paste it into your AI, then replace the last line with the guide's text or table (for a video: its description). Many AIs cannot open links, so paste the text itself.</p>
+      <details><summary>Show the prompt</summary><pre id="prompt-preview"></pre></details>
+    </section>
+
+    <section class="step">
+      <h2><span class="num">2</span> Paste the answer</h2>
+      <textarea id="answer" rows="10" spellcheck="false" placeholder="Paste the AI's whole answer here. The page finds the build in it."></textarea>
+    </section>
+
+    <section class="step">
+      <h2><span class="num">3</span> Check</h2>
+      <p id="summary" class="summary" aria-live="polite">Nothing pasted yet.</p>
+      <ol id="issues" class="issues"></ol>
+      <button id="copy-fix" disabled>Copy fix request</button>
+      <p class="hint">Send the fix request to your AI and paste its new answer above. Prerequisites, free spell slots and whether a page appears on a level are checked by the mod when you press Apply build.</p>
+    </section>
+
+    <section class="step">
+      <h2><span class="num">4</span> Into the game</h2>
+      <div class="row">
+        <button id="copy-json" class="primary" disabled>Copy JSON</button>
+        <button id="download" disabled>Download .json</button>
+      </div>
+      <ol class="howto">
+        <li>Open the Builds window: the button in the HUD, or Ctrl+P.</li>
+        <li>Press <b>Paste from clipboard</b> (or put the downloaded file into <code>Mods/WrathBuildPlanner/Builds/</code>).</li>
+        <li>Assign the build to a character, then press <b>Apply build</b> in the level-up or character-creation window.</li>
+      </ol>
+    </section>
+
+    <section class="reference">
+      <details>
+        <summary>Format reference</summary>
+        <pre id="format-example"></pre>
+        <ul>
+          <li><code>format</code> — always 1. <code>name</code> — required. <code>author</code>, <code>source</code> — optional.</li>
+          <li><code>for</code> — <code>"main"</code>, <code>"any"</code> or a companion's name; a hint only.</li>
+          <li><code>start</code> — character creation: <code>race</code>, <code>raceBonus</code>, <code>abilityScores</code> (point-buy values before the racial bonus, 7–18), <code>alignment</code>.</li>
+          <li><code>skills</code> — the order skill points are spent in; a level may carry its own list.</li>
+          <li><code>levels</code> — character levels 1–20 ascending: <code>class</code>, <code>archetype</code> (first level of that class), <code>abilityPoint</code> (levels 4, 8, …), <code>picks</code>, <code>spells</code>.</li>
+          <li><code>picks</code> — <code>{ "in": page title, "pick": name }</code>; nested choices as a list, parent first. A bare name works when it fits exactly one open page.</li>
+          <li><code>mythic</code> — ranks 1–10: <code>path</code> where the game asks for it, <code>picks</code>.</li>
+        </ul>
+        <p class="hint">Not part of a build: portrait, appearance, voice, name, equipment.</p>
+      </details>
+      <details>
+        <summary>Name browser</summary>
+        <input id="search" type="search" placeholder="Search classes, archetypes, pages, feats, spells" autocomplete="off">
+        <ul id="results" class="results"></ul>
+        <button id="download-names">Download name list</button>
+        <p id="names-version" class="hint"></p>
+      </details>
+    </section>
+  </main>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

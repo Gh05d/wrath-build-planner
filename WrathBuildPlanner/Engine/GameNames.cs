@@ -5,9 +5,11 @@ using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Classes;
 using Kingmaker.Blueprints.Classes.Selection;
+using Kingmaker.Blueprints.Facts;
 using Kingmaker.Localization;
 using Kingmaker.Localization.Shared;
 using Kingmaker.UI;
+using MenuLabels = Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector.FeatureSelectionExtensions;
 using Kingmaker.UnitLogic.Abilities.Blueprints;
 using Kingmaker.UnitLogic.Class.LevelUp;
 using WrathBuildPlanner.Core;
@@ -80,13 +82,36 @@ namespace WrathBuildPlanner.Engine {
         public static NameCandidate OfSelection(FeatureSelectionState selection) {
             string title = null;
             try {
-                title = Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector.FeatureSelectionExtensions.GetMenuLabel(selection);
+                title = MenuLabels.GetMenuLabel(selection);
             } catch (Exception e) {
                 Logging.Log.Engine.Error(e, "page title lookup failed");
             }
             var blueprint = selection.Selection as BlueprintFeature;
-            if (blueprint == null) return Make(selection, title);
-            return Make(selection, title, blueprint.Name, English(blueprint.m_DisplayName), blueprint.name);
+            string english = EnglishPageTitle(selection, title);
+            if (blueprint == null) return Make(selection, title, english);
+            return Make(selection, title, english, blueprint.Name, English(blueprint.m_DisplayName), blueprint.name);
+        }
+
+        /// <summary>
+        /// The English text of a page title. GetMenuLabel returns one of the UICharGen strings or the selection's
+        /// own name, both in the game's language (IL: FeatureSelectionExtensions.GetMenuLabel / GetFeatureSelectionName);
+        /// find which one it was and read that string from the English pack. In an English game: the title itself.
+        /// </summary>
+        public static string EnglishPageTitle(FeatureSelectionState state, string title) {
+            if (string.IsNullOrEmpty(title)) return title;
+            try {
+                var c = MenuLabels.Texts?.CharGen;
+                if (c != null) {
+                    foreach (var text in new[] { c.ChannelEnergy, c.Deity, c.Heritage, c.Bond, c.Animal, c.Discovery,
+                                                 c.Bloodline, c.Domain, c.School, c.Spellbook, c.Blast, c.ChooseAbilities }) {
+                        if (text != null && (string)text == title) return English(text) ?? title;
+                    }
+                }
+                if (state?.Selection is BlueprintUnitFact fact && fact.Name == title) return English(fact.m_DisplayName) ?? title;
+            } catch (Exception e) {
+                Logging.Log.Engine.Error(e, "English page title lookup failed");
+            }
+            return title;
         }
 
         public static List<NameCandidate> Classes() =>

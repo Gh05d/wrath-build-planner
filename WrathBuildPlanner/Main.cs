@@ -9,6 +9,8 @@ namespace WrathBuildPlanner {
         static Harmony harmony;
         public static UnityModManager.ModEntry ModEntry;
         public static string ModPath;
+        /// <summary>The authoring page (site/ in this repository, published by .github/workflows/pages.yml).</summary>
+        public const string AuthoringUrl = "https://gh05d.github.io/wrath-build-planner/";
         public static Persistence.BuildLibrary Library;
         static AreaWatcher areaWatcher;
 
