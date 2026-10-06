@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "name": "Test Mercenary",
+  "for": "any",
+  "start": {
+    "race": "Human",
+    "raceBonus": "Strength",
+    "abilityScores": { "Strength": 16, "Dexterity": 14, "Constitution": 14, "Intelligence": 10, "Wisdom": 10, "Charisma": 10 },
+    "alignment": "Lawful Good"
+  },
+  "skills": ["Athletics", "Perception", "Persuasion", "Mobility"],
+  "levels": [
+    { "level": 1, "class": "Fighter", "picks": [ { "in": "Feat", "pick": "Power Attack" }, { "in": "Bonus Combat Feat", "pick": "Cleave" } ] }
+  ]
+}

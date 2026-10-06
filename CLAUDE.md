@@ -35,7 +35,8 @@ In-game tests: skill `testing-mods-in-game`, scripts in `tests/ingame/`.
 - **Names at the main menu (2026-10-06):** `BlueprintUnitFact.Name` throws there for names with text templates (`NameTemplate.Generate` NRE); `NameExport` reads `LocalizedString.LoadString(CurrentPack, CurrentLocale)` instead.
 - **Link to the build page (2026-10-06):** in Game Mode on the Deck `Application.OpenURL` opens no browser; the address lands on the clipboard and the window says so.
 - **Authoring page acceptance (2026-10-06):** two forum guides and one design request through Haiku and Sonnet: no format errors, every checker suggestion right, clean after at most one fix round; Sonnet builds applied in creation and a level-up with nothing open beyond what the guide leaves open; Haiku dropped two correct feats in its fix round instead of taking the suggested names (fix-request wording) (`docs/superpowers/specs/2026-10-04-wrath-build-planner-authoring-acceptance.md`).
-- **Not verified**: "Paste from clipboard" under Proton (the import behind it is), 16:9 layout, a mercenary's assignment made during its creation, spontaneous casters swapping spells, the game running in a language other than English.
+- **Mercenary creation (2026-10-06):** opened on the fixture through `Player.CreateCustomCompanion()` (`mercenary.sh`). A mercenary starts with a race preselected, and `SelectRace.Apply` sets `LevelUpState.CanSelectRace` to false once any race is chosen — `RaceStep` therefore no longer checks that flag; `LevelUpController.SelectRace` removes the old choice first, like the race page. Mercenaries get 20 point-buy points (main character 25), and the game keeps Next disabled until all points are spent; the page checks both. The assignment made during creation is bound to the new unit.
+- **Not verified**: "Paste from clipboard" under Proton (the import behind it is), 16:9 layout, spontaneous casters swapping spells, the game running in a language other than English.
 
 ## Authoring page (`site/`)
 
@@ -55,7 +56,7 @@ Spec: `pathfinder-mods/docs/superpowers/specs/2026-10-04-wrath-build-planner-aut
 
 ## In-game tests
 
-    bash tests/ingame/all.sh          # guards, multiclass, mythic, extras, chargen, example — restarts the game per script
+    bash tests/ingame/all.sh          # guards, multiclass, mythic, extras, chargen, example, mercenary — restarts the game per script
 
 Scripts assert on the English result text: game language English, mod language `auto`.
 `Engine/TestHooks.cs` holds the static entry points the scripts call through DevBridge.

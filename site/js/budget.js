@@ -5,6 +5,7 @@ import { normalize } from './match.js';
 
 const COST = { 7: -4, 8: -2, 9: -1, 10: 0, 11: 1, 12: 2, 13: 3, 14: 5, 15: 7, 16: 10, 17: 13, 18: 17 };
 const BUDGET = 25;
+const MERCENARY_BUDGET = 20;   // shown in the mercenary creation window (Deck, 2026-10-06)
 const ATTRIBUTES = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
 
 function attribute(key) {
@@ -23,7 +24,16 @@ export function checkPointBuy(build) {
     values[name] = value;
   }
   const cost = ATTRIBUTES.reduce((sum, a) => sum + COST[values[a]], 0);
-  if (cost <= BUDGET) return [];
-  return [{ error: false, where: 'start.abilityScores',
-    message: `These scores cost ${cost} points; character creation gives ${BUDGET} (main character), so the mod cannot reach them all. Lower some scores, or check whether the guide gives final scores that include racial bonuses.` }];
+  // "for" other than the main character: the start block can only be a mercenary's, and a mercenary gets less.
+  const forMain = !build.for || normalize(build.for) === 'main';
+  const budget = forMain ? BUDGET : MERCENARY_BUDGET;
+  const who = forMain ? `character creation gives ${BUDGET} (main character)` : `a mercenary gets ${MERCENARY_BUDGET}`;
+  if (cost > budget)
+    return [warning(`These scores cost ${cost} points; ${who}, so the mod cannot reach them all. Lower some scores, or check whether the guide gives final scores that include racial bonuses.`)];
+  // The game keeps Next disabled while points are unspent ("There are unspent points …").
+  if (cost < budget)
+    return [warning(`These scores cost ${cost} points; ${who}, and all points must be spent before the game lets you continue. Raise some scores so they add up to ${budget}.`)];
+  return [];
 }
+
+const warning = message => ({ error: false, where: 'start.abilityScores', message });

@@ -41,7 +41,10 @@ namespace WrathBuildPlanner.Engine.Steps {
             var race = (Kingmaker.Blueprints.Classes.BlueprintRace)outcome.Match.Tag;
             if (context.State.SelectedRace == race) {
                 context.Report.Steps.Add(StepResult.Already(label));
-            } else if (!context.State.CanSelectRace || !context.Controller.SelectRace(race)) {
+            // No CanSelectRace check here: SelectRace.Apply sets it false once any race is chosen (a mercenary
+            // starts with one), and LevelUpController.SelectRace removes that choice before adding the new one —
+            // the same call the race page makes (IL 2026-10-06). The call itself is the gate.
+            } else if (!context.Controller.SelectRace(race)) {
                 context.Report.Steps.Add(StepResult.Open(label, OpenReason.NotSelectable));
                 return;
             } else {
