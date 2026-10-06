@@ -111,6 +111,16 @@ namespace WrathBuildPlanner.Engine {
             return bar == null ? "NO BAR" : bar.DescribeForTests().Replace("\n", " || ");
         }
 
+        /// <summary>Page titles of the open window's selections as "title=English" pairs.</summary>
+        static string PageTitles() {
+            var controller = WindowTracker.Controller;
+            if (controller == null) return "NO WINDOW";
+            return string.Join(" | ", controller.State.Selections.Select(s => {
+                string title = Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector.FeatureSelectionExtensions.GetMenuLabel(s);
+                return $"{title}={GameNames.EnglishPageTitle(s, title)}";
+            }));
+        }
+
         static string ToggleWindow() {
             UI.BuildsWindow.Toggle();
             return UI.BuildsWindow.IsOpen ? "open" : "closed";
