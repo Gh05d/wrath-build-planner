@@ -5,13 +5,18 @@ const CATEGORY_SEPARATORS = [' — ', ' – ', ' - '];
 
 // Lower-case letters and digits only; accents removed ("Cat’s Grace" == "cats grace").
 // C# char.IsLetterOrDigit covers the letter categories and Nd.
+const normalized = new Map();   // the name list has some 20,000 names; each is normalized once
+
 export function normalize(text) {
   if (!text) return '';
+  const cached = normalized.get(text);
+  if (cached !== undefined) return cached;
   let out = '';
   for (const c of String(text).normalize('NFD')) {
     if (/\p{Mn}/u.test(c)) continue;
     if (/[\p{L}\p{Nd}]/u.test(c)) out += c.toLowerCase();
   }
+  normalized.set(text, out);
   return out;
 }
 
