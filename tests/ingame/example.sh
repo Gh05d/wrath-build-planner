@@ -21,7 +21,10 @@ echo "--- example build, level 1"
 bridge 'wait 2' >/dev/null
 enter_creation
 bridge 'invoke WrathBuildPlanner.Engine.TestHooks.Assign two-handed-fighter.json' >/dev/null
-out=$(press_apply)
+# This second creation defers Apply behind the premade page; a quick second press must not run it twice.
+twice=$(bridge 'invoke WrathBuildPlanner.Engine.TestHooks.PressApply' 'invoke WrathBuildPlanner.Engine.TestHooks.PressApply' | sed -n 's/^returned //p')
+expect_eq "$(grep -c '^DEFERRED' <<<"$twice")" '2' 'a second press while Apply waits does not run it'
+out=$(bridge 'wait 2' 'invoke WrathBuildPlanner.Engine.TestHooks.BarText' | sed -n 's/^returned //p' | sed 's/^.*details([^)]*)=//')
 echo "$out"
 expect "$out" ', 0 open' 'example build applies completely at level 1'
 # A second creation in the session opens on the portrait page with the premade still set (2026-10-06: blank page).
