@@ -61,6 +61,20 @@ function unknown(where, what, name, outcome, context = '') {
   return warn(where, `Unknown ${what} '${name}'${context}.${hint} ${NOTE}`);
 }
 
+// A name that is unknown in one category often exists in another: a prestige class written as an archetype,
+// a racial heritage written as the race. Saying so lets the LLM fix the build instead of dropping the entry.
+function elsewhere(name, index) {
+  const asClass = match(name, index.classes.map(c => c.cand), { suggest: false });
+  if (asClass.kind === 'unique') return { kind: 'class', display: asClass.match.display };
+  const key = normalize(name);
+  for (const page of index.pages) {
+    if (page.n.length < 2) continue;
+    const hit = page.cands.find(c => c.names.some(n => normalize(n) === key || normalize(n).startsWith(key)));
+    if (hit) return { kind: 'option', display: hit.display, page: page.cand.display };
+  }
+  return null;
+}
+
 // The mod checks class and race on import (BuildValidator) and refuses the file when one is unknown.
 function refused(where, what, name, outcome) {
   const hint = outcome.suggestions.length ? ` Did you mean: ${outcome.suggestions.join(', ')}?` : '';
@@ -76,7 +90,12 @@ export function checkNames(build, index) {
   const issues = [];
   if (build.start && !blank(build.start.race)) {
     const o = match(build.start.race, index.races);
-    if (o.kind === 'none') issues.push(refused('start.race', 'race', build.start.race, o));
+    if (o.kind === 'none') {
+      const other = elsewhere(build.start.race, index);
+      if (other?.kind === 'option')
+        issues.push(warn('start.race', `'${build.start.race}' is not a race: '${other.display}' is an option on page '${other.page}'. Set the race it belongs to and add the option as a pick on level 1.`));
+      else issues.push(refused('start.race', 'race', build.start.race, o));
+    }
   }
 
   const classes = [];
@@ -91,7 +110,10 @@ export function checkNames(build, index) {
     }
     if (!blank(row.archetype) && cls) {
       const o = match(row.archetype, cls.archetypes);
-      if (o.kind === 'none') issues.push(unknown(where, `archetype of ${cls.cand.display}`, row.archetype, o));
+      const other = o.kind === 'none' ? elsewhere(row.archetype, index) : null;
+      if (other?.kind === 'class')
+        issues.push(warn(where, `'${row.archetype}' is a class of its own, not an archetype of ${cls.cand.display}: write "class": "${other.display}" on the levels taken in it.`));
+      else if (o.kind === 'none') issues.push(unknown(where, `archetype of ${cls.cand.display}`, row.archetype, o));
     }
     checkPicks(row.picks, where, index, issues);
   }

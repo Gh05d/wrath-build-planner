@@ -75,6 +75,21 @@ test('an unknown class or race says the mod refuses the file', () => {
   assert.ok(messages.every(m => /refuse/.test(m) && !/Fine if/.test(m)), messages.join('\n'));
 });
 
+test('an archetype that is a class says so', () => {
+  const [w] = checkNames({ format: 1, name: 'x', levels: [{ level: 11, class: 'Fighter', archetype: 'Eldritch Knight' }] }, index);
+  assert.match(w.message, /'Eldritch Knight' is a class of its own, not an archetype of Fighter/);
+});
+
+test('a race that is an option on a page says where it belongs', () => {
+  const [w] = checkNames({ format: 1, name: 'x', start: { race: 'Grimspawn' }, levels: [{ level: 1, class: 'Fighter' }] }, index);
+  assert.match(w.message, /'Grimspawn' is not a race: 'Grimspawn \(Daemon-Spawn\)' is an option on page 'Heritage'/);
+});
+
+test('the fix request explains scores above 18', () => {
+  const text = fixRequest([{ error: true, where: 'start.abilityScores', message: 'Dexterity is 19; starting scores go from 7 to 18 (before the racial bonus).' }]);
+  assert.match(text, /subtract the racial bonus/);
+});
+
 test('no name list (Review Focus 3)', () => {
   const issues = checkNames(build(['Power Attack']), null);
   assert.equal(issues.length, 1);
