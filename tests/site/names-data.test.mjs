@@ -36,6 +36,10 @@ test('chains: parameters and nested selections', () => {
   assert.ok(warrior.sub.some(id => names.features[id].n[0] === 'Gladiator'), 'Warrior > Gladiator');
 });
 
+test('racial pages name their race', () => {
+  assert.equal(names.pages.find(p => p.n.includes('TieflingHeritageSelection')).race, 'Tiefling');
+});
+
 test('races and mythic paths', () => {
   assert.ok(names.races.some(r => r[0] === 'Human'));
   assert.ok(names.mythicPaths.some(p => p[0] === 'Angel'));

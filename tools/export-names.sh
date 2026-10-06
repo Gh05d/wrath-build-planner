@@ -14,5 +14,6 @@ tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
 ssh -o ConnectTimeout=6 deck-direct "cat '$MOD_DIR_DECK/names.json'" > "$tmp"
 python3 -c 'import json, sys; d = json.load(open(sys.argv[1])); assert d["pages"] and d["features"]' "$tmp"
+chmod 644 "$tmp"
 mv "$tmp" "$REPO/site/data/names.json"
 ls -l "$REPO/site/data/names.json"

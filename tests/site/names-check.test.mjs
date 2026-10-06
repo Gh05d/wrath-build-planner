@@ -82,7 +82,16 @@ test('an archetype that is a class says so', () => {
 
 test('a race that is an option on a page says where it belongs', () => {
   const [w] = checkNames({ format: 1, name: 'x', start: { race: 'Grimspawn' }, levels: [{ level: 1, class: 'Fighter' }] }, index);
-  assert.match(w.message, /'Grimspawn' is not a race: 'Grimspawn \(Daemon-Spawn\)' is an option on page 'Heritage'/);
+  assert.match(w.message, /'Grimspawn' is not a race: 'Grimspawn \(Daemon-Spawn\)' is a Tiefling option on page 'Heritage'\. Set "race": "Tiefling"/);
+});
+
+test('a racial page pick under another race is flagged', () => {
+  const [w] = checkNames({ format: 1, name: 'x', start: { race: 'Human' }, levels: [{ level: 1, class: 'Fighter', picks: [{ in: 'Heritage', pick: 'Grimspawn (Daemon-Spawn)' }] }] }, index);
+  assert.match(w.message, /page 'Heritage' belongs to the race Tiefling, but the build's race is Human/);
+});
+
+test('a racial page pick under its own race passes', () => {
+  assert.deepEqual(checkNames({ format: 1, name: 'x', start: { race: 'Tiefling' }, levels: [{ level: 1, class: 'Fighter', picks: [{ in: 'Heritage', pick: 'Grimspawn (Daemon-Spawn)' }] }] }, index), []);
 });
 
 test('the fix request explains scores above 18', () => {

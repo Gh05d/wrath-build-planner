@@ -70,7 +70,7 @@ function elsewhere(name, index) {
   for (const page of index.pages) {
     if (page.n.length < 2) continue;
     const hit = page.cands.find(c => c.names.some(n => normalize(n) === key || normalize(n).startsWith(key)));
-    if (hit) return { kind: 'option', display: hit.display, page: page.cand.display };
+    if (hit) return { kind: 'option', display: hit.display, page: page.cand.display, race: page.race };
   }
   return null;
 }
@@ -92,12 +92,15 @@ export function checkNames(build, index) {
     const o = match(build.start.race, index.races);
     if (o.kind === 'none') {
       const other = elsewhere(build.start.race, index);
-      if (other?.kind === 'option')
+      if (other?.kind === 'option' && other.race)
+        issues.push(warn('start.race', `'${build.start.race}' is not a race: '${other.display}' is a ${other.race} option on page '${other.page}'. Set "race": "${other.race}" and add { "in": "${other.page}", "pick": "${other.display}" } on level 1.`));
+      else if (other?.kind === 'option')
         issues.push(warn('start.race', `'${build.start.race}' is not a race: '${other.display}' is an option on page '${other.page}'. Set the race it belongs to and add the option as a pick on level 1.`));
       else issues.push(refused('start.race', 'race', build.start.race, o));
     }
   }
 
+  const raceName = build.start && !blank(build.start.race) ? build.start.race : null;
   const classes = [];
   for (const row of build.levels ?? []) {
     if (!row) continue;
@@ -115,7 +118,7 @@ export function checkNames(build, index) {
         issues.push(warn(where, `'${row.archetype}' is a class of its own, not an archetype of ${cls.cand.display}: write "class": "${other.display}" on the levels taken in it.`));
       else if (o.kind === 'none') issues.push(unknown(where, `archetype of ${cls.cand.display}`, row.archetype, o));
     }
-    checkPicks(row.picks, where, index, issues);
+    checkPicks(row.picks, where, index, issues, raceName);
   }
 
   // Spells: against the spell lists of every class the build takes.
@@ -142,13 +145,14 @@ export function checkNames(build, index) {
   return issues;
 }
 
-function checkPicks(picks, where, index, issues) {
+function checkPicks(picks, where, index, issues, race) {
   (picks ?? []).forEach((entry, i) => {
     if (entry == null) return;
     const at = `${where} picks[${i + 1}]`;
     const pick = typeof entry === 'string'
       ? { in: null, chain: [entry] }
       : { in: entry.in ?? null, chain: Array.isArray(entry.pick) ? entry.pick : [entry.pick] };
+    pick.race = race;
     if (pick.chain.length === 0 || pick.chain.some(blank)) return;   // the format check reports it
     let pages = index.pages;
     if (!blank(pick.in)) {
@@ -208,6 +212,11 @@ function checkChain(pick, pages, at, index, issues) {
   }
   if (r.kind === 'none') { issues.push(unknown(at, 'option', chain[0], r.outcome, blank(pick.in) ? '' : ` on page '${pick.in}'`)); return; }
   if (r.kind === 'ambiguous') { issues.push(tied(at, chain[0], r.outcome)); return; }
+  // A racial page (heritage) exists only for its race.
+  const race = pick.race;
+  const racial = r.hits.map(h => h.page.race).filter(Boolean);
+  if (race && racial.length === r.hits.length && !racial.some(x => normalize(x) === normalize(race)))
+    issues.push(warn(at, `'${chain[0]}' on page '${r.hits[0].page.cand.display}' belongs to the race ${racial[0]}, but the build's race is ${race}.`));
   if (blank(pick.in)) {
     const titles = [...new Set(r.hits.filter(h => h.page.n.length > 1).map(h => h.page.cand.display))];
     if (titles.length > 1)

@@ -34,6 +34,8 @@ namespace WrathBuildPlanner.Engine {
             [JsonProperty("items", NullValueHandling = NullValueHandling.Ignore)] public List<string> Items;
             [JsonProperty("params", NullValueHandling = NullValueHandling.Ignore)] public List<List<string>> Params;
             [JsonProperty("nested", NullValueHandling = NullValueHandling.Ignore)] public bool? Nested;
+            // Set on pages reached from a race's features (heritages): the page only exists for that race.
+            [JsonProperty("race", NullValueHandling = NullValueHandling.Ignore)] public string Race;
         }
 
         class ClassEntry {
@@ -94,8 +96,9 @@ namespace WrathBuildPlanner.Engine {
             output.Meta["modVersion"] = Main.ModEntry?.Info?.Version ?? "?";
 
             foreach (var race in root.CharacterRaces) {
-                output.Races.Add(Identities(Raw(race.m_DisplayName), race.name));
-                foreach (var feature in race.Features) Walk(feature);
+                string raceName = Raw(race.m_DisplayName);
+                output.Races.Add(Identities(raceName, race.name));
+                foreach (var feature in race.Features) Walk(feature, false, raceName ?? race.name);
             }
             foreach (var cls in root.CharacterClasses) {
                 var archetypes = cls.Archetypes.Where(a => a != null).ToList();
@@ -139,12 +142,12 @@ namespace WrathBuildPlanner.Engine {
 
         // nested: reached as an option of another selection, not granted by a progression directly.
         // A selection met both ways is recorded as a top-level page (progression entries are walked first per root).
-        void Walk(BlueprintFeatureBase feature, bool nested = false) {
+        void Walk(BlueprintFeatureBase feature, bool nested = false, string race = null) {
             if (feature == null || !visited.Add(feature)) return;
             AddFeature(feature);
-            if (feature is IFeatureSelection selection) AddPage(feature, selection, nested);
+            if (feature is IFeatureSelection selection) AddPage(feature, selection, nested, race);
             if (feature is BlueprintFeatureSelection group)
-                foreach (var item in group.AllFeatures) Walk(item, true);
+                foreach (var item in group.AllFeatures) Walk(item, true, race);
             if (feature is BlueprintProgression progression) WalkEntries(progression.LevelEntries);
         }
 
@@ -168,7 +171,7 @@ namespace WrathBuildPlanner.Engine {
             }
         }
 
-        void AddPage(BlueprintFeatureBase feature, IFeatureSelection selection, bool nested) {
+        void AddPage(BlueprintFeatureBase feature, IFeatureSelection selection, bool nested, string race) {
             var state = new FeatureSelectionState(null, default(FeatureSource), selection, 0, 0);
             string display = Raw(feature.m_DisplayName);
             string title;
@@ -177,7 +180,7 @@ namespace WrathBuildPlanner.Engine {
             } catch (Exception) {
                 title = display;   // the default label is the selection's own name, which can throw the same way
             }
-            var page = new Page { Names = Identities(title, display, feature.name), Nested = nested ? true : (bool?)null };
+            var page = new Page { Names = Identities(title, display, feature.name), Nested = nested ? true : (bool?)null, Race = race };
             if (feature is BlueprintFeatureSelection group) page.Items = group.AllFeatures.Where(f => f != null).Select(Id).Distinct().ToList();
             if (feature is BlueprintParametrizedFeature parametrized) page.Params = output.Features[Id(feature)].Params;
             output.Pages.Add(page);

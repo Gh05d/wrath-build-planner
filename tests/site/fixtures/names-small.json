@@ -12,6 +12,10 @@
     [
       "Elf",
       "ElfRace"
+    ],
+    [
+      "Tiefling",
+      "TieflingRace"
     ]
   ],
   "classes": [
@@ -181,7 +185,8 @@
       ],
       "items": [
         "f6"
-      ]
+      ],
+      "race": "Tiefling"
     }
   ]
 }
