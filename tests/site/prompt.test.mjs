@@ -28,6 +28,11 @@ test('page titles that differ only in case appear once', () => {
   assert.ok(line.includes('Channel Energy'));
 });
 
+test('pages known only by their internal name are not listed as titles', () => {
+  const p = buildPrompt(names, vocab, 'guide');
+  assert.doesNotMatch(p, /OracleRevelationWeaponMastery/);
+});
+
 test('design variant', () => {
   const p = buildPrompt(names, vocab, 'design');
   assert.match(p, /Design a build/);

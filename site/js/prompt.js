@@ -45,7 +45,7 @@ const VARIANTS = {
 function pageTitles(names) {
   const byKey = new Map();
   for (const page of names.pages) {
-    if (page.nested) continue;
+    if (page.nested || page.n.length < 2) continue;   // a lone identity is the internal name: no title in the game
     const title = page.n[0];
     const key = title.toLowerCase();
     const capitals = t => (t.match(/[A-Z]/g) ?? []).length;
