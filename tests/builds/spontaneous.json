@@ -1,0 +1,48 @@
+{
+  "format": 1,
+  "name": "Test Spontaneous",
+  "for": "main",
+  "levels": [
+    {
+      "level": 1,
+      "class": "Fighter"
+    },
+    {
+      "level": 2,
+      "class": "Sorcerer",
+      "spells": [
+        "Magic Missile",
+        "Mage Armor"
+      ]
+    },
+    {
+      "level": 3,
+      "class": "Sorcerer"
+    },
+    {
+      "level": 4,
+      "class": "Sorcerer",
+      "spells": [
+        "Shield"
+      ],
+      "abilityPoint": "Charisma"
+    },
+    {
+      "level": 5,
+      "class": "Sorcerer",
+      "spells": [
+        "Scorching Ray"
+      ]
+    }
+  ],
+  "skills": [
+    "Persuasion",
+    "Knowledge (Arcana)",
+    "Use Magic Device",
+    "Perception",
+    "Athletics",
+    "Mobility",
+    "Knowledge (World)",
+    "Lore (Nature)"
+  ]
+}
