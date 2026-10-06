@@ -17,6 +17,7 @@ namespace WrathBuildPlanner.Core {
             { "import.bad_json", "Not valid JSON at line {0}, position {1}: {2}" },
             { "import.bad_structure", "The build's structure is wrong: {0}" },
             { "import.at", "{0} (line {1}, position {2})" },
+            { "import.smart_quotes", "The text uses typographic quotes (\u201C \u201D) where JSON needs straight quotes (\")." },
             { "import.unreadable", "The file could not be read: {0}" },
             { "import.not_stored", "The build could not be stored: {0}" },
             { "pick.bad_token", "A pick must be a name or an object, found {0}." },

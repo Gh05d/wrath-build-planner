@@ -50,7 +50,9 @@ namespace WrathBuildPlanner.Core {
                 else Normalise(result.Build);
             } catch (JsonReaderException e) {
                 result.Build = null;
-                result.Issues.Add(ImportIssue.Error("file", Messages.Get("import.bad_json", e.LineNumber, e.LinePosition, FirstSentence(e.Message))));
+                string message = Messages.Get("import.bad_json", e.LineNumber, e.LinePosition, FirstSentence(e.Message));
+                if (json.IndexOfAny(TypographicQuotes) >= 0) message += " " + Messages.Get("import.smart_quotes");
+                result.Issues.Add(ImportIssue.Error("file", message));
             } catch (Exception e) {
                 // JsonSerializationException for unknown fields and wrong shapes; anything else a converter or cast throws.
                 result.Build = null;
@@ -73,18 +75,47 @@ namespace WrathBuildPlanner.Core {
             }
         }
 
-        // LLM output arrives with a BOM, inside a Markdown code fence, often with a sentence before and after.
-        // A fenced block anywhere in the text is taken as the build.
+        static readonly char[] TypographicQuotes = { '\u201C', '\u201D', '\u201E' };
+        static readonly Regex Fence = new Regex("```([^\\n`]*)\\n(.*?)```", RegexOptions.Singleline);
+
+        // LLM output arrives with a BOM, inside Markdown code fences, with sentences or a second block ("Left out")
+        // before and after; players paste the whole answer. Same order as the build page (site/js/extract.js):
+        // the first ```json block, else the first fenced block holding an object, else the first {...} in the text.
         static string Clean(string text) {
             if (text == null) return "";
             string s = text.Trim().TrimStart('\uFEFF').Trim();
-            int fence = s.IndexOf("```", StringComparison.Ordinal);
-            if (fence >= 0) {
-                int firstBreak = s.IndexOf('\n', fence);
-                int lastFence = s.LastIndexOf("```", StringComparison.Ordinal);
-                if (firstBreak >= 0 && lastFence > firstBreak) s = s.Substring(firstBreak + 1, lastFence - firstBreak - 1).Trim();
+            return FromFence(s) ?? FromBraces(s) ?? s;
+        }
+
+        static string FromFence(string s) {
+            string firstObject = null;
+            foreach (Match block in Fence.Matches(s)) {
+                string language = block.Groups[1].Value.Trim().ToLowerInvariant();
+                string body = block.Groups[2].Value.Trim();
+                if (language == "json" || language == "jsonc") return body;
+                if (firstObject == null && body.StartsWith("{")) firstObject = body;
             }
-            return s;
+            return firstObject;
+        }
+
+        // From the first "{" to its matching "}", skipping braces inside strings; unclosed: to the end.
+        static string FromBraces(string s) {
+            int start = s.IndexOf('{');
+            if (start < 0) return null;
+            int depth = 0;
+            bool inString = false;
+            for (int i = start; i < s.Length; i++) {
+                char c = s[i];
+                if (inString) {
+                    if (c == '\\') i++;
+                    else if (c == '"') inString = false;
+                    continue;
+                }
+                if (c == '"') inString = true;
+                else if (c == '{') depth++;
+                else if (c == '}' && --depth == 0) return s.Substring(start, i - start + 1);
+            }
+            return s.Substring(start);
         }
 
         // Newtonsoft appends "Path '…', line N, position M." and sometimes a multi-line explanation — keep the first sentence.

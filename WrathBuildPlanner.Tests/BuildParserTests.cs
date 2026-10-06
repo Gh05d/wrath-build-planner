@@ -76,9 +76,10 @@ namespace WrathBuildPlanner.Tests {
         }
 
         [Fact]
-        public void ProseAroundJsonFails() {
-            var result = BuildParser.Parse("Here is your build:\n" + Full);
-            Assert.False(result.Ok);
+        public void ProseAroundJsonIsFound() {
+            // Changed 2026-10-06: players paste the AI's whole answer into the game, as the build page allows.
+            var result = BuildParser.Parse("Here is your build:\n" + Full + "\nEnjoy!");
+            Assert.True(result.Ok, string.Join("; ", result.Issues.Select(i => i.Message)));
         }
 
         [Fact]
