@@ -4,7 +4,6 @@
   "bar.change": "Changer…",
   "bar.set": "Choisir un build…",
   "bar.players_page": "Hors du build : le portrait, l’apparence, la voix et le nom sont à vous de choisir.",
-  "bar.details": "Détails",
   "bar.preview": "Ce niveau : {0}",
   "bar.no_row": "Le build n'a pas d'entrée pour le niveau {0}.",
   "bar.no_row_mythic": "Le build n'a pas d'entrée pour le rang mythique {0}.",

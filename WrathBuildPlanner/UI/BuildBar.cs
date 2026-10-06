@@ -43,6 +43,7 @@ namespace WrathBuildPlanner.UI {
         GameObject details;
         TextMeshProUGUI nameLabel;
         TextMeshProUGUI changeLabel;
+        RectTransform detailsChevron;
         TextMeshProUGUI detailsText;
         string detailsBody = "";
         bool hasBuild;
@@ -87,7 +88,7 @@ namespace WrathBuildPlanner.UI {
             var changeButton = Widgets.ActionButton(root.transform, "Change", set.Length >= change.Length ? set : change,
                 ButtonFont, () => bar.ChangeRequested?.Invoke(), 130f);
             bar.changeLabel = changeButton.GetComponentInChildren<TextMeshProUGUI>();
-            Widgets.ActionButton(root.transform, "Details", "bar.details".i18n(), ButtonFont, bar.ToggleDetails, 110f);
+            bar.detailsChevron = DetailsToggle(root.transform, bar.ToggleDetails);
 
             bar.BuildDetails(view.transform);
             bar.Refresh();
@@ -139,7 +140,35 @@ namespace WrathBuildPlanner.UI {
 
             scroll.viewport = viewportRect;
             scroll.content = contentRect;
-            details.SetActive(false);
+            ShowDetails(false);
+        }
+
+        // A square button with a chevron instead of a "Details" label: the name field needs the width.
+        // The chevron points up while the panel is closed and down while it is open.
+        static RectTransform DetailsToggle(Transform parent, UnityEngine.Events.UnityAction onClick) {
+            var (button, _) = UIHelpers.Create("Details", parent);
+            Widgets.InRow(button, BarHeight, 0f);
+            if (ThemeProvider.ActionButtonNormal != null) {
+                ThemeProvider.ApplyActionButton(button);
+            } else {
+                var fallback = button.AddComponent<Button>();
+                fallback.targetGraphic = UIHelpers.AddBackground(button, Theme.BandFallbackMauve);
+                Widgets.ApplyColorTint(fallback);
+            }
+            button.GetComponent<Button>().onClick.AddListener(onClick);
+            var icon = Widgets.IconImage(button.transform, "Chevron", Icon.Chevron, BarHeight * 0.45f, Theme.BandText);
+            var rect = icon.Rect();
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            icon.GetComponent<LayoutElement>().ignoreLayout = true;
+            return rect;
+        }
+
+        void ShowDetails(bool open) {
+            if (details == null) return;
+            details.SetActive(open);
+            if (open) details.transform.SetAsLastSibling();
+            if (detailsChevron != null) detailsChevron.localRotation = Quaternion.Euler(0f, 0f, open ? 0f : 180f);
         }
 
         // Sliced theme sprite; a higher multiplier draws its border thinner. Flat colour if the sprite is missing.
@@ -217,8 +246,7 @@ namespace WrathBuildPlanner.UI {
 
         void ToggleDetails() {
             if (details == null) return;
-            details.SetActive(!details.activeSelf);
-            if (details.activeSelf) details.transform.SetAsLastSibling();
+            ShowDetails(!details.activeSelf);
         }
 
         string shownFile;
@@ -281,15 +309,12 @@ namespace WrathBuildPlanner.UI {
             var entry = Assigned(out _);
             if (entry == null || !entry.Ok) {
                 Refresh();
-                if (details != null) details.SetActive(true);
+                ShowDetails(true);
                 return;
             }
             LastReport = LevelApplier.Apply(WindowTracker.Controller, entry.Build);
             SetDetails(Render(LastReport));
-            if (details != null) {
-                details.SetActive(true);
-                details.transform.SetAsLastSibling();
-            }
+            ShowDetails(true);
             // No row or no window means nothing was changed — that includes the page shown.
             if (!LastReport.NoRow && !LastReport.NoWindow) PlannerController.Instance?.JumpToFirstOpenPage();
         }
