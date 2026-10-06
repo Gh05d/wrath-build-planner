@@ -2,6 +2,7 @@ import { extractJson } from './extract.js';
 import { validate, canonicalize } from './validate.js';
 import { indexNames, checkNames } from './names-check.js';
 import { fixRequest } from './fix.js';
+import { checkPointBuy } from './budget.js';
 import { buildPrompt, EXAMPLE } from './prompt.js';
 import { normalize } from './match.js';
 
@@ -83,7 +84,7 @@ function check() {
   const { build, renamed } = canonicalize(extracted.value);
   if (renamed.length) issues.push({ error: false, note: true, where: '', message: `Wrote the field names ${renamed.join(', ')} in the spelling the format uses.` });
   if (state.vocab) issues.push(...validate(build, { vocab: state.vocab, known: null }));
-  if (!issues.some(i => i.structure)) issues.push(...checkNames(build, state.index));
+  if (!issues.some(i => i.structure)) issues.push(...checkPointBuy(build), ...checkNames(build, state.index));
   state.issues = issues;
   state.value = build;
   state.clean = JSON.stringify(build, null, 2);
