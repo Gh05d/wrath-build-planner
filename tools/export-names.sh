@@ -17,3 +17,5 @@ python3 -c 'import json, sys; d = json.load(open(sys.argv[1])); assert d["pages"
 chmod 644 "$tmp"
 mv "$tmp" "$REPO/site/data/names.json"
 ls -l "$REPO/site/data/names.json"
+# The plain prompt files for AI agents list the page titles: keep them in step.
+node "$REPO/tools/agent-files.mjs"

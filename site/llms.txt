@@ -1,0 +1,34 @@
+# Wrath Build Planner
+
+> A mod for Pathfinder: Wrath of the Righteous (Unity Mod Manager). It reads character builds from JSON files and, in the game's level-up and character-creation windows, makes each level's picks; the player reviews and confirms every level. This file tells an AI agent how to turn a build guide into such a file and put it where the mod reads it.
+
+The page https://gh05d.github.io/wrath-build-planner/ does the same for people; its prompt and checker run in the browser. Everything an agent needs is also available as plain files:
+
+- [prompt.txt](https://gh05d.github.io/wrath-build-planner/prompt.txt): the conversion prompt — format, example, all page titles, skills, alignments, rules. Replace its last line with the guide.
+- [prompt-design.txt](https://gh05d.github.io/wrath-build-planner/prompt-design.txt): the same prompt for designing a build from a description instead of a guide.
+- [check.mjs](https://github.com/Gh05d/wrath-build-planner/blob/master/site/check.mjs): the page's checker for Node 18+. It needs the files next to it, so clone the repository (below).
+- [names.json](https://gh05d.github.io/wrath-build-planner/data/names.json): every name the game offers, per level-up page (1.6 MB; check.mjs reads it for you).
+- [Format reference and example build](https://github.com/Gh05d/wrath-build-planner/blob/master/Builds-examples/two-handed-fighter.json)
+
+## Steps
+
+1. Get the guide's text. Many guide sites block plain fetches; ask the user to paste the text if you cannot read it.
+2. Read prompt.txt, follow it, and write the build JSON for the guide. Keep the guide's choices; leave out what you are not sure exists in the game.
+3. Check it:
+
+       git clone --depth 1 https://github.com/Gh05d/wrath-build-planner
+       node wrath-build-planner/site/check.mjs answer.txt --out my-build.json
+
+   The input may be your whole answer or the bare JSON (`-` reads stdin, `--json` prints a machine-readable result). Exit code 0: no errors and no warnings. Exit code 1: it prints a "fix request" listing each problem, with similar names from the game; apply it and check again until the exit code is 0 (leave out what you cannot match — a missing pick stays open for the player, a wrong one is worse). `--out` writes the clean build as soon as there are no errors. Prerequisites, free spell slots and whether a page appears on a level are only checked in the game.
+4. Save the file into the mod's Builds folder: `<game folder>/Mods/WrathBuildPlanner/Builds/<short-name>.json`. The game folder is the one that contains `Wrath.exe`; default Steam locations:
+   - Windows: `C:\Program Files (x86)\Steam\steamapps\common\Pathfinder Second Adventure\`
+   - Linux / Steam Deck: `~/.local/share/Steam/steamapps/common/Pathfinder Second Adventure/` (or `steamapps/common/` on an SD card or other Steam library)
+   - GOG and other stores: the folder the game was installed to.
+   `Mods/WrathBuildPlanner/` exists once the mod is installed; create `Builds/` if it is missing. Use a new file name: the mod identifies a build by its file name, so overwriting a file changes the build of every character it is assigned to.
+5. Tell the user the rest happens in the game: open the Builds window (HUD button or Ctrl+P; it reads the folder when it opens, or press "Reload folder"), assign the build to a character, then press "Apply build" in the level-up or character-creation window. Assigning is done in the game, not through files.
+
+## Notes
+
+- Not part of a build: portrait, appearance, voice, name, equipment.
+- The mod matches names against what the game offers on the page at hand, so content from other mods works in the game even when check.mjs reports it as unknown (names.json lists the base game and DLCs).
+- The mod is installed with Unity Mod Manager: https://www.nexusmods.com/site/mods/21. Releases: https://github.com/Gh05d/wrath-build-planner/releases

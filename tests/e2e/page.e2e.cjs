@@ -57,6 +57,13 @@ const EXAMPLE = fs.readFileSync(path.join(__dirname, '..', '..', 'Builds-example
   check(await page.$eval('#get-mod', a => /github\.com\/Gh05d\/wrath-build-planner\/releases|nexusmods\.com/.test(a.href)), 'a link to get the mod');
   check(await page.$eval('#about img', img => img.complete && img.naturalWidth > 0), 'the in-game screenshot loads');
 
+  // An AI agent that reads the page finds its way to the plain files.
+  check(await page.$eval('#for-agents a', a => a.getAttribute('href')) === 'llms.txt', 'the page points agents to llms.txt');
+  for (const file of ['llms.txt', 'prompt.txt', 'prompt-design.txt', 'check.mjs']) {
+    const response = await page.request.get(url + file);
+    check(response.ok() && (await response.text()).length > 500, `${file} is served`);
+  }
+
   // Step 1: prompt and variants.
   await page.click('#copy-prompt');
   const prompt = await clipboard();

@@ -25,6 +25,10 @@ Use the build page: **https://gh05d.github.io/wrath-build-planner/** — copy a 
 any other chat AI together with a guide, check the answer on the page, and paste it into the game. The page
 also has the full format reference and a search over every class, archetype, feat and spell name.
 
+Using an AI agent that runs commands (Claude Code, Codex, …)? Point it to
+**https://gh05d.github.io/wrath-build-planner/llms.txt**: the prompt as a plain file, the checker for the
+command line (`node site/check.mjs answer.txt --out build.json`) and where to save the build.
+
 The Builds window links to the page ("Create a build with ChatGPT or Claude…"). An example build:
 `Builds-examples/two-handed-fighter.json`.
 

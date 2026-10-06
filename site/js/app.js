@@ -1,13 +1,11 @@
-import { extractJson } from './extract.js';
-import { validate, canonicalize } from './validate.js';
-import { indexNames, checkNames } from './names-check.js';
+import { checkText } from './check.js';
+import { indexNames } from './names-check.js';
 import { fixRequest } from './fix.js';
-import { checkPointBuy } from './budget.js';
 import { buildPrompt, EXAMPLE } from './prompt.js';
 import { normalize } from './match.js';
 
 const $ = id => document.getElementById(id);
-const state = { vocab: null, names: null, index: null, clean: null, value: null, issues: [] };
+const state = { vocab: null, names: null, index: null, clean: null, value: null, issues: [], canFix: false };
 const STORE_KEY = 'wbp.lastPaste';
 
 async function loadJson(url) {
@@ -60,6 +58,7 @@ function run() {
     check();
   } catch (e) {
     state.clean = null;
+    state.canFix = false;   // a checker bug is nothing the AI can fix
     state.issues = [{ error: true, where: '', message: `The checker failed on this text (${e.message}). Please report it with the text you pasted.` }];
     render('The build could not be checked.');
   }
@@ -68,38 +67,12 @@ function run() {
 function check() {
   const text = $('answer').value;
   try { localStorage.setItem(STORE_KEY, text); } catch { /* storage blocked */ }
-  state.clean = null;
-  state.value = null;
-  if (!text.trim()) { state.issues = []; render('Nothing pasted yet.'); return; }
-
-  const extracted = extractJson(text);
-  const issues = extracted.notes.map(message => ({ error: false, note: true, where: '', message }));
-  if (extracted.error) {
-    // No build at all (prompt pasted, no JSON): nothing an AI could fix, so no fix request.
-    issues.push({ error: true, where: '', message: extracted.error.message, noBuild: !/not valid/.test(extracted.error.message) });
-    state.issues = issues;
-    render('The build could not be read.');
-    return;
-  }
-  const { build, renamed } = canonicalize(extracted.value);
-  if (renamed.length) issues.push({ error: false, note: true, where: '', message: `Wrote the field names ${renamed.join(', ')} in the spelling the format uses.` });
-  if (state.vocab) issues.push(...validate(build, { vocab: state.vocab, known: null }));
-  if (!issues.some(i => i.structure)) issues.push(...checkPointBuy(build), ...checkNames(build, state.index));
-  state.issues = issues;
-  state.value = build;
-  state.clean = JSON.stringify(build, null, 2);
-  render(summary(build, issues));
-}
-
-function summary(build, issues) {
-  const levels = (build.levels ?? []).filter(Boolean).map(r => Number(r.level)).filter(Number.isFinite);
-  const picks = [...(build.levels ?? []), ...(build.mythic ?? [])].filter(Boolean).reduce((n, r) => n + (r.picks?.length ?? 0), 0);
-  const errors = issues.filter(i => i.error).length;
-  const warnings = issues.filter(i => !i.error && !i.note).length;
-  const range = levels.length ? `Levels ${Math.min(...levels)}–${Math.max(...levels)}` : 'No levels';
-  const mythic = (build.mythic ?? []).filter(Boolean).length;
-  const n = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
-  return `${build.name ?? 'Unnamed build'}: ${range}${mythic ? `, ${n(mythic, 'mythic rank')}` : ''}, ${n(picks, 'pick')} — ${n(errors, 'error')}, ${n(warnings, 'warning')}.`;
+  const result = checkText(text, { vocab: state.vocab, index: state.index });
+  state.issues = result.issues;
+  state.value = result.build;
+  state.clean = result.clean;
+  state.canFix = result.canFix;
+  render(result.summary ?? 'Nothing pasted yet.');
 }
 
 function render(text) {
@@ -122,7 +95,7 @@ function render(text) {
     return li;
   }));
   const hasErrors = state.issues.some(i => i.error);
-  $('copy-fix').disabled = !state.issues.some(i => !i.note) || state.issues.some(i => i.noBuild);
+  $('copy-fix').disabled = !state.canFix;
   $('copy-json').disabled = !state.clean || hasErrors;
   $('download').disabled = !state.clean || hasErrors;
 }
