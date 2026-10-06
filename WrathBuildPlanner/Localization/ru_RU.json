@@ -28,6 +28,8 @@
   "window.next_level": "далее: уровень {0}",
   "window.paste": "Вставить из буфера обмена",
   "window.reload": "Перечитать папку",
+  "window.ai": "Создать билд с ChatGPT или Claude…",
+  "window.ai_opened": "Если браузер не открылся, адрес страницы скопирован в буфер обмена: {0}",
   "window.valid": "корректен",
   "window.errors": "ошибок: {0}",
   "window.for": "для: {0}",

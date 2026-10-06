@@ -28,6 +28,8 @@
   "window.next_level": "next: level {0}",
   "window.paste": "Paste from clipboard",
   "window.reload": "Reload folder",
+  "window.ai": "Create a build with ChatGPT or Claude…",
+  "window.ai_opened": "If no browser opens, the page’s address is on your clipboard: {0}",
   "window.valid": "valid",
   "window.errors": "{0} error(s)",
   "window.for": "for: {0}",

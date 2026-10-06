@@ -28,6 +28,8 @@
   "window.next_level": "下一级：{0}",
   "window.paste": "从剪贴板粘贴",
   "window.reload": "重新读取文件夹",
+  "window.ai": "用 ChatGPT 或 Claude 创建构筑…",
+  "window.ai_opened": "如果浏览器没有打开，页面地址已复制到剪贴板：{0}",
   "window.valid": "有效",
   "window.errors": "{0} 个错误",
   "window.for": "适用：{0}",

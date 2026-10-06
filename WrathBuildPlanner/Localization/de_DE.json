@@ -28,6 +28,8 @@
   "window.next_level": "als Nächstes: Stufe {0}",
   "window.paste": "Aus Zwischenablage einfügen",
   "window.reload": "Ordner neu einlesen",
+  "window.ai": "Build mit ChatGPT oder Claude erstellen…",
+  "window.ai_opened": "Falls sich kein Browser öffnet: Die Adresse der Seite liegt in der Zwischenablage: {0}",
   "window.valid": "gültig",
   "window.errors": "{0} Fehler",
   "window.for": "für: {0}",
