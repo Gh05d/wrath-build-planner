@@ -16,6 +16,7 @@ test('guide variant', () => {
   assert.match(p, /Bonus Combat Feat/);
   assert.match(p, /Knowledge \(Arcana\)/);
   assert.match(p, /Lawful Good/);
+  assert.match(p, /class levels/, 'guides that count class levels (EK 1-10 after Magus 10) map to character levels');
   console.log(`prompt length: ${p.length}`);
   // Limit raised from 6,000 to 7,500 by the user on 2026-10-06: all 186 page titles stay in the prompt.
   assert.ok(p.length < 7500, `prompt is ${p.length} characters`);
