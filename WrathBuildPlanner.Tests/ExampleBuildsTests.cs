@@ -6,7 +6,7 @@ using Xunit;
 
 namespace WrathBuildPlanner.Tests {
     public class ExampleBuildsTests {
-        static string RepoFolder(string name) {
+        internal static string RepoFolder(string name) {
             var dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
             while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, name))) dir = dir.Parent;
             Assert.True(dir != null, $"folder '{name}' not found above the test output");

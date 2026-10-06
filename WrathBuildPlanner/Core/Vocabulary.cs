@@ -5,6 +5,13 @@ namespace WrathBuildPlanner.Core {
     public static class Vocabulary {
         public static readonly string[] Attributes = { "Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma" };
 
+        static readonly List<KeyValuePair<string, string[]>> skillList = new List<KeyValuePair<string, string[]>>();
+        static readonly List<KeyValuePair<string, string[]>> alignmentList = new List<KeyValuePair<string, string[]>>();
+
+        /// <summary>Canonical skill → accepted spellings, in registration order (exported to site/data/vocabulary.json).</summary>
+        public static IReadOnlyList<KeyValuePair<string, string[]>> SkillList => skillList;
+        public static IReadOnlyList<KeyValuePair<string, string[]>> AlignmentList => alignmentList;
+
         static readonly Dictionary<string, string> AttributeNames = new Dictionary<string, string>();
         static readonly Dictionary<string, string> SkillNames = new Dictionary<string, string>();
         static readonly Dictionary<string, string> AlignmentNames = new Dictionary<string, string>();
@@ -39,11 +46,13 @@ namespace WrathBuildPlanner.Core {
         }
 
         static void AddSkill(string canonical, params string[] spellings) {
+            skillList.Add(new KeyValuePair<string, string[]>(canonical, spellings));
             SkillNames[NameMatcher.Normalize(canonical)] = canonical;
             foreach (string spelling in spellings) SkillNames[NameMatcher.Normalize(spelling)] = canonical;
         }
 
         static void AddAlignment(string canonical, params string[] spellings) {
+            alignmentList.Add(new KeyValuePair<string, string[]>(canonical, spellings));
             AlignmentNames[NameMatcher.Normalize(canonical)] = canonical;
             foreach (string spelling in spellings) AlignmentNames[NameMatcher.Normalize(spelling)] = canonical;
         }
