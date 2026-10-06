@@ -66,6 +66,10 @@ function unknown(where, what, name, outcome, context = '') {
 function elsewhere(name, index) {
   const asClass = match(name, index.classes.map(c => c.cand), { suggest: false });
   if (asClass.kind === 'unique') return { kind: 'class', display: asClass.match.display };
+  for (const c of index.classes) {
+    const asArchetype = match(name, c.archetypes, { suggest: false });
+    if (asArchetype.kind === 'unique') return { kind: 'archetype', display: asArchetype.match.display, of: c.cand.display };
+  }
   const key = normalize(name);
   for (const page of index.pages) {
     if (page.n.length < 2) continue;
@@ -102,6 +106,7 @@ export function checkNames(build, index) {
 
   const raceName = build.start && !blank(build.start.race) ? build.start.race : null;
   const classes = [];
+  const unknownClasses = [];   // one message per name, with all its levels
   for (const row of build.levels ?? []) {
     if (!row) continue;
     const where = `levels[level ${row.level}]`;
@@ -109,7 +114,12 @@ export function checkNames(build, index) {
     if (!blank(row.class)) {
       const o = match(row.class, index.classes.map(c => c.cand));
       if (o.kind === 'unique') classes.push(cls = index.classes.find(c => c.cand === o.match));
-      else if (o.kind === 'none') issues.push(refused(where, 'class', row.class, o));
+      else if (o.kind === 'none') {
+        const other = elsewhere(row.class, index);
+        unknownClasses.push({ level: row.level, name: row.class, issue: other?.kind === 'archetype'
+          ? warn('', `'${row.class}' is an archetype of ${other.of}: write "class": "${other.of}" and "archetype": "${other.display}" on the first level taken in it, "class": "${other.of}" on the others.`)
+          : refused('', 'class', row.class, o) });
+      }
     }
     if (!blank(row.archetype) && cls) {
       const o = match(row.archetype, cls.archetypes);
@@ -120,6 +130,13 @@ export function checkNames(build, index) {
     }
     checkPicks(row.picks, where, index, issues, raceName);
   }
+
+  const byName = new Map();
+  for (const u of unknownClasses) {
+    if (!byName.has(u.name)) byName.set(u.name, { issue: u.issue, levels: [] });
+    byName.get(u.name).levels.push(u.level);
+  }
+  for (const { issue, levels } of byName.values()) issues.push({ ...issue, where: `levels[level ${levels.join(', ')}]` });
 
   // Spells: against the spell lists of every class the build takes.
   const spellCands = [...new Set(classes.flatMap(c => c.spells))].map(id => index.spells.get(id)).filter(Boolean);
@@ -142,7 +159,13 @@ export function checkNames(build, index) {
     }
     checkPicks(row.picks, where, index, issues);
   }
-  return issues;
+
+  const bare = issues.filter(i => i.bare).map(i => i.bare);
+  const result = issues.filter(i => !i.bare);
+  if (bare.length > 0)
+    result.push({ error: false, note: true, where: '',
+      message: `${bare.length} pick${bare.length === 1 ? '' : 's'} without "in" (${[...new Set(bare)].join(', ')}): the game offers ${bare.length === 1 ? 'it' : 'each'} on several pages. The mod takes the page when only one open page on that level offers the name, and otherwise reports it as ambiguous; then add "in".` });
+  return result;
 }
 
 function checkPicks(picks, where, index, issues, race) {
@@ -219,8 +242,8 @@ function checkChain(pick, pages, at, index, issues) {
     issues.push(warn(at, `'${chain[0]}' on page '${r.hits[0].page.cand.display}' belongs to the race ${racial[0]}, but the build's race is ${race}.`));
   if (blank(pick.in)) {
     const titles = [...new Set(r.hits.filter(h => h.page.n.length > 1).map(h => h.page.cand.display))];
-    if (titles.length > 1)
-      issues.push(warn(at, `'${chain[0]}' is offered on several pages (${titles.join(', ')}). Add "in" with the page title so the mod knows which one.`));
+    // Bare names are allowed (the prompt suggests them when the page is unknown); collected into one note.
+    if (titles.length > 1) issues.push({ bare: chain.join(' > ') });
   }
   const first = r.hits[0].match;
   let current = first.id ? index.features.get(first.id) : null;

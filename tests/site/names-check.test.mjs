@@ -31,9 +31,12 @@ test('unknown page', () => {
   assert.match(w.message, /Unknown page 'Feats'.*Did you mean: Feat/);
 });
 
-test('bare pick offered on two pages asks for "in" (Review Focus 5)', () => {
-  const [w] = checkNames(build(['Power Attack']), index);
-  assert.match(w.message, /offered on several pages \(.*Feat.*Bonus Combat Feat.*\)/);
+test('bare picks offered on several pages give one note, not warnings (the prompt allows bare names)', () => {
+  const issues = checkNames(build(['Power Attack', 'Weapon Focus (Greatsword)']), index);
+  assert.equal(issues.length, 1, JSON.stringify(issues));
+  assert.equal(issues[0].note, true);
+  assert.match(issues[0].message, /2 picks without "in".*Power Attack.*Weapon Focus/);
+  assert.match(issues[0].message, /reports it as ambiguous/);
 });
 
 test('guide notation without "in" resolves as a chain (Review Focus 5)', () => {
@@ -65,9 +68,8 @@ test('an empty chain adds no name warning next to the format error', () => {
   assert.deepEqual(checkNames(build([{ in: 'Feat', pick: [] }]), index), []);
 });
 
-test('the several-pages warning names only titles players see', () => {
-  const [w] = checkNames(build(['Power Attack']), index);
-  assert.doesNotMatch(w.message, /InternalOnlySelection/);
+test('a bare pick only on internal-name pages adds no note', () => {
+  assert.deepEqual(checkNames(build([{ in: 'Feat', pick: 'Power Attack' }]), index), []);
 });
 
 test('an unknown class or race says the mod refuses the file', () => {
@@ -78,6 +80,14 @@ test('an unknown class or race says the mod refuses the file', () => {
 test('an archetype that is a class says so', () => {
   const [w] = checkNames({ format: 1, name: 'x', levels: [{ level: 11, class: 'Fighter', archetype: 'Eldritch Knight' }] }, index);
   assert.match(w.message, /'Eldritch Knight' is a class of its own, not an archetype of Fighter/);
+});
+
+test('a class that is an archetype says whose, once for all its levels', () => {
+  const levels = [1, 2, 3].map(level => ({ level, class: 'Two-Handed Fighter' }));
+  const issues = checkNames({ format: 1, name: 'x', levels }, index);
+  assert.equal(issues.length, 1, JSON.stringify(issues));
+  assert.equal(issues[0].where, 'levels[level 1, 2, 3]');
+  assert.match(issues[0].message, /'Two-Handed Fighter' is an archetype of Fighter: write "class": "Fighter" and "archetype": "Two-Handed Fighter" on the first level/);
 });
 
 test('a race that is an option on a page says where it belongs', () => {

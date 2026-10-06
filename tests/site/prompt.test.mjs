@@ -33,6 +33,11 @@ test('pages known only by their internal name are not listed as titles', () => {
   assert.doesNotMatch(p, /OracleRevelationWeaponMastery/);
 });
 
+test('the prompt allows a bare name when the page is unknown', () => {
+  // Sonnet left out feats whose page it did not know (table guide, 2026-10-06).
+  assert.match(buildPrompt(names, vocab, 'guide'), /If you know the feat but not its page, write just the name/);
+});
+
 test('design variant', () => {
   const p = buildPrompt(names, vocab, 'design');
   assert.match(p, /Design a build/);
