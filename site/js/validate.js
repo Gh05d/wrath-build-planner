@@ -57,9 +57,18 @@ function didYouMean(field, allowed) {
 const BELONGS = { picks: 'inside each entry of "levels"', spells: 'inside each entry of "levels"', class: 'inside each entry of "levels"',
   level: 'inside each entry of "levels"', race: 'inside "start"', alignment: 'inside "start"', abilityScores: 'inside "start"', path: 'inside an entry of "mythic"' };
 
+// Background and deity are pages of level 1, not fields of "start" (ChatGPT put them there, 2026-10-06).
+const LEVEL_ONE_PAGES = { background: 'Background Selection', deity: 'Deity' };
+
 function fields(obj, kind, where, issues) {
   for (const f of Object.keys(obj)) {
     if (FIELDS[kind].includes(f)) continue;
+    const page = kind === 'start' ? LEVEL_ONE_PAGES[f.toLowerCase()] : null;
+    if (page) {
+      const value = typeof obj[f] === 'string' ? obj[f] : '…';
+      issues.push({ ...error(where, `'${f}' is not a field of "start": add { "in": "${page}", "pick": "${value}" } to the picks of level 1. The mod refuses files with unknown fields.`), structure: true });
+      continue;
+    }
     const target = ALIASES[f] ?? (BELONGS[f] ? f : null);
     if (target && !FIELDS[kind].includes(target) && BELONGS[target]) {
       issues.push({ ...error(where, `Field '${f}' is not allowed here: "${target}" goes ${BELONGS[target]}. The mod refuses files with unknown fields.`), structure: true });

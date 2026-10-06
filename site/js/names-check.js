@@ -263,6 +263,43 @@ function suggestOnce(name, pages, index) {
   return outcome;
 }
 
+// An option the page named by "in" does not offer is often a choice inside a group on that page ("Martial Disciple"
+// under "Oblate") or an option of another page ("Last Stand" is a Mythic Ability, not a Mythic Feat). Say so, and
+// for a misspelling name the page of each suggestion (ChatGPT build from a Neoseeker guide, 2026-10-06).
+function elsewhereOnPages(at, pageName, name, pages, index) {
+  const key = normalize(name);
+  let nested = null;
+  for (const page of pages)
+    for (const c of page.cands) {
+      const group = c.id ? index.features.get(c.id) : null;
+      const inner = group?.sub?.map(id => index.features.get(id)?.cand).filter(Boolean) ?? [];
+      const hit = match(name, inner, { suggest: false });
+      if (hit.kind === 'unique' && !nested) nested = { group: c.display, display: hit.match.display };
+    }
+  const other = resolve(name, index.pages.filter(p => !p.nested), index);
+  const titles = other.kind === 'unique'
+    ? [...new Set(other.hits.filter(h => h.page.n.length > 1 && !pages.includes(h.page)).map(h => h.page.cand.display))] : [];
+  // A close name on the page itself ("Lizard Familiar" for "Lizard") beats the same word on another page, which is
+  // not even mentioned: the guide meant this page, and naming the other one would lure the LLM there.
+  const inPage = suggestOnce(name, pages, index);
+  if (inPage.suggestions.length)
+    return warn(at, `Unknown option '${name}' on page '${pageName}'. Did you mean: ${inPage.suggestions.join(', ')}? ${NOTE}`);
+  if (titles.length)
+    return warn(at, `'${name}' is not on page '${pageName}' but on ${titles.map(t => `'${t}'`).join(' or ')}: write "in": "${titles[0]}"` +
+      (nested ? ` (or ["${nested.group}", "${nested.display}"] on '${pageName}').` : '.'));
+  if (nested)
+    return warn(at, `'${name}' is a choice under '${nested.group}': write ["${nested.group}", "${nested.display}"] with "in": "${pageName}".`);
+  if (!key) return null;
+  const outcome = suggestOnce(name, index.pages, index);
+  if (!outcome.suggestions.length) return null;
+  const withPages = outcome.suggestions.map(display => {
+    const c = index.allCands.find(x => x.display === display);
+    const on = c?.id ? [...(index.pagesOf.get(c.id) ?? [])] : [];
+    return on.length && !on.includes(pageName) ? `${display} (page '${on[0]}')` : display;
+  });
+  return warn(at, `Unknown option '${name}' on page '${pageName}'. Did you mean: ${withPages.join(', ')}? ${NOTE}`);
+}
+
 function checkChain(pick, pages, at, index, issues) {
   let chain = pick.chain;
   let r = resolve(chain[0], pages, index);
@@ -274,7 +311,10 @@ function checkChain(pick, pages, at, index, issues) {
       if (head.kind !== 'none') { chain = split; r = head; }
     }
   }
-  if (r.kind === 'none') { issues.push(unknown(at, 'option', chain[0], r.outcome, blank(pick.in) ? '' : ` on page '${pick.in}'`)); return; }
+  if (r.kind === 'none') {
+    issues.push(blank(pick.in) ? unknown(at, 'option', chain[0], r.outcome) : elsewhereOnPages(at, pick.in, chain[0], pages, index) ?? unknown(at, 'option', chain[0], r.outcome, ` on page '${pick.in}'`));
+    return;
+  }
   if (r.kind === 'ambiguous') { issues.push(tied(at, chain[0], r.outcome)); return; }
   // A racial page (heritage) exists only for its race.
   const race = pick.race;

@@ -60,3 +60,7 @@ test('the mod recognises the same prompt start as the page (BuildParser.PromptSt
   const start = /const string PromptStart = "([^"]+)";/.exec(cs)[1];
   assert.ok(buildPrompt(names, vocab, 'guide').startsWith(start));
 });
+
+test('the prompt says background and deity are level-1 picks', () => {
+  assert.match(buildPrompt(names, vocab, 'guide'), /Background and deity are picks on level 1/);
+});

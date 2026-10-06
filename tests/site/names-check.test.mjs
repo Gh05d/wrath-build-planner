@@ -132,6 +132,29 @@ test('the build race is compared after matching, so internal names work', () => 
   assert.deepEqual(checkNames({ format: 1, name: 'x', start: { race: 'TieflingRace' }, levels: [{ level: 1, class: 'Fighter', picks: [{ in: 'Heritage', pick: 'Grimspawn (Daemon-Spawn)' }] }] }, index), []);
 });
 
+const mythic = picks => ({ format: 1, name: 'x', mythic: [{ rank: 1, picks }] });
+
+test('a name on another page says which page (ChatGPT build, 2026-10-06)', () => {
+  const [w] = checkNames(mythic([{ in: 'Mythic Feat', pick: 'Last Stand' }]), index);
+  assert.match(w.message, /'Last Stand' is not on page 'Mythic Feat' but on 'Mythic Ability': write "in": "Mythic Ability"/);
+});
+
+test('a close name on the page itself beats the same word on another page', () => {
+  const [w] = checkNames(build([{ in: "Witch's Familiar", pick: 'Lizard' }]), index);
+  assert.match(w.message, /Did you mean: Lizard Familiar\?/);
+  assert.doesNotMatch(w.message, /Shifter Aspect/);
+});
+
+test('a misspelt name suggests the right page too', () => {
+  const [w] = checkNames(mythic([{ in: 'Mythic Ability', pick: 'Dance Macabre' }]), index);
+  assert.match(w.message, /Danse Macabre \(page 'First Ascension'\)/);
+});
+
+test('a choice inside a group says the chain', () => {
+  const [w] = checkNames(build([{ in: 'Background Selection', pick: 'Gladiator' }]), index);
+  assert.match(w.message, /'Gladiator' is a choice under 'Warrior': write \["Warrior", "Gladiator"\]/);
+});
+
 test('the fix request explains scores above 18', () => {
   const text = fixRequest([{ error: true, where: 'start.abilityScores', message: 'Dexterity is 19; starting scores go from 7 to 18 (before the racial bonus).' }]);
   assert.match(text, /remove the racial modifier/);

@@ -71,7 +71,7 @@ ${EXAMPLE}
 FIELDS
 - format: always 1. name: a short name for the build. author, source: optional.
 - for: "main" for the main character, "any", or a companion's name.
-- start: character creation only. race; raceBonus = the attribute that gets a free +2 (Human, Half-Elf, Half-Orc); abilityScores = point-buy values BEFORE racial bonuses, each 7-18; alignment.
+- start: character creation only. Background and deity are picks on level 1 ({ "in": "Background Selection", … }, { "in": "Deity", … }), not fields of start. race; raceBonus = the attribute that gets a free +2 (Human, Half-Elf, Half-Orc); abilityScores = point-buy values BEFORE racial bonuses, each 7-18; alignment.
 - skills: the order in which skill points are spent on every level.
 - levels: one entry per character level 1-20, ascending. "class" on every entry. "archetype" only on the first level of that class. "abilityPoint" on levels 4, 8, 12, 16, 20.
 - picks: what the player selects on that level: { "in": page title, "pick": name }. A choice inside a choice is a list, parent first: ["Weapon Focus", "Greatsword"].

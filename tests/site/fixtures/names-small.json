@@ -125,6 +125,51 @@
         "Adopted Elf (Elf)",
         "AdoptedElf"
       ]
+    },
+    "m1": {
+      "n": [
+        "Last Stand",
+        "LastStandFeature"
+      ]
+    },
+    "m2": {
+      "n": [
+        "Extra Mythic Ability",
+        "ExtraMythicAbilityMythicFeat"
+      ],
+      "sub": [
+        "m1"
+      ]
+    },
+    "m3": {
+      "n": [
+        "Flawless Attacks",
+        "FlawlessAttacks"
+      ]
+    },
+    "m4": {
+      "n": [
+        "Danse Macabre",
+        "DanseMacabreFeature"
+      ]
+    },
+    "d1": {
+      "n": [
+        "Lamashtu",
+        "LamashtuFeature"
+      ]
+    },
+    "w1": {
+      "n": [
+        "Lizard Familiar",
+        "LizardFamiliar"
+      ]
+    },
+    "w2": {
+      "n": [
+        "Lizard",
+        "ShifterAspectLizard"
+      ]
     }
   },
   "spells": {
@@ -239,6 +284,61 @@
         "f8"
       ],
       "race": "Human"
+    },
+    {
+      "n": [
+        "Mythic Ability",
+        "MythicAbilitySelection"
+      ],
+      "items": [
+        "m1"
+      ]
+    },
+    {
+      "n": [
+        "Mythic Feat",
+        "MythicFeatSelection"
+      ],
+      "items": [
+        "m2",
+        "m3"
+      ]
+    },
+    {
+      "n": [
+        "First Ascension",
+        "FirstAscensionSelection"
+      ],
+      "items": [
+        "m4"
+      ]
+    },
+    {
+      "n": [
+        "Deity",
+        "DeitySelection"
+      ],
+      "items": [
+        "d1"
+      ]
+    },
+    {
+      "n": [
+        "Witch's Familiar",
+        "WitchFamiliarSelection"
+      ],
+      "items": [
+        "w1"
+      ]
+    },
+    {
+      "n": [
+        "Shifter Aspect",
+        "ShifterAspectSelection"
+      ],
+      "items": [
+        "w2"
+      ]
     }
   ]
 }

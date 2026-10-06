@@ -59,3 +59,9 @@ test('a field on the wrong level says where it belongs', () => {
   const [r] = validate({ format: 1, name: 'x', race: 'Human', levels: [{ level: 1, class: 'Fighter' }] }, { vocab, known: null });
   assert.match(r.message, /"race" goes inside "start"/);
 });
+
+test('background and deity in the start block get the level-1 pick to write instead', () => {
+  const issues = validate({ format: 1, name: 'x', start: { race: 'Human', background: 'Martial Disciple', deity: 'Lamashtu' }, levels: [{ level: 1, class: 'Fighter' }] }, { vocab, known: null });
+  assert.match(issues[0].message, /'background' is not a field of "start": add \{ "in": "Background Selection", "pick": "Martial Disciple" \} to the picks of level 1/);
+  assert.match(issues[1].message, /\{ "in": "Deity", "pick": "Lamashtu" \}/);
+});
