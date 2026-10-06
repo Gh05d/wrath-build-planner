@@ -95,11 +95,6 @@ namespace WrathBuildPlanner.Engine {
             output.Meta["exported"] = DateTime.UtcNow.ToString("yyyy-MM-dd");
             output.Meta["modVersion"] = Main.ModEntry?.Info?.Version ?? "?";
 
-            foreach (var race in root.CharacterRaces) {
-                string raceName = Raw(race.m_DisplayName);
-                output.Races.Add(Identities(raceName, race.name));
-                foreach (var feature in race.Features) Walk(feature, false, raceName ?? race.name);
-            }
             foreach (var cls in root.CharacterClasses) {
                 var archetypes = cls.Archetypes.Where(a => a != null).ToList();
                 var books = new[] { cls.Spellbook }.Concat(archetypes.Select(a => a.m_ReplaceSpellbook?.Get()));
@@ -120,6 +115,13 @@ namespace WrathBuildPlanner.Engine {
             Walk(root.m_FeatsProgression?.Get());
             Walk(root.m_BasicFeatSelection?.Get());
             Walk(root.m_DeitySelection?.Get());
+            // Races last: a page is tagged with a race only when nothing else reaches it. Walked first, the Human bonus
+            // feat (the basic Feat selection) tagged the Feat page and everything under it as Human (review 2026-10-06).
+            foreach (var race in root.CharacterRaces) {
+                string raceName = Raw(race.m_DisplayName);
+                output.Races.Add(Identities(raceName, race.name));
+                foreach (var feature in race.Features) Walk(feature, false, raceName ?? race.name);
+            }
         }
 
         IEnumerable<string> Spells(BlueprintSpellbook book) {

@@ -30,6 +30,8 @@ namespace WrathBuildPlanner.Engine.Steps {
         public void Run(ApplyContext context) {
             var start = context.Build.Start;
             if (start == null || string.IsNullOrWhiteSpace(start.Race)) return;
+            // LeavePregenStep failed and reported it: a premade character keeps its race.
+            if (context.State.IsPregen) return;
             string label = Messages.Get("step.race", start.Race);
 
             var outcome = NameMatcher.Match(start.Race, GameNames.Races());

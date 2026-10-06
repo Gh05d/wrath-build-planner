@@ -16,6 +16,10 @@
     [
       "Tiefling",
       "TieflingRace"
+    ],
+    [
+      "Half-Elf",
+      "HalfElfRace"
     ]
   ],
   "classes": [
@@ -109,6 +113,18 @@
         "Grimspawn (Daemon-Spawn)",
         "TieflingHeritageDaemon"
       ]
+    },
+    "f7": {
+      "n": [
+        "Arcane Focus",
+        "ElvenArcaneFocus"
+      ]
+    },
+    "f8": {
+      "n": [
+        "Adopted Elf (Elf)",
+        "AdoptedElf"
+      ]
     }
   },
   "spells": {
@@ -131,7 +147,8 @@
       "items": [
         "f1",
         "f2",
-        "f3"
+        "f3",
+        "f7"
       ]
     },
     {
@@ -187,6 +204,41 @@
         "f6"
       ],
       "race": "Tiefling"
+    },
+    {
+      "n": [
+        "Weapon Focus",
+        "WeaponFocus"
+      ],
+      "params": [
+        [
+          "Greatsword"
+        ],
+        [
+          "Longsword"
+        ]
+      ],
+      "nested": true
+    },
+    {
+      "n": [
+        "Racial Heritage",
+        "HalfElfHeritageSelection"
+      ],
+      "items": [
+        "f8"
+      ],
+      "race": "Half-Elf"
+    },
+    {
+      "n": [
+        "Racial Heritage",
+        "HumanHeritageSelection"
+      ],
+      "items": [
+        "f8"
+      ],
+      "race": "Human"
     }
   ]
 }

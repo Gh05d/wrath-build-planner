@@ -36,6 +36,11 @@ test('chains: parameters and nested selections', () => {
   assert.ok(warrior.sub.some(id => names.features[id].n[0] === 'Gladiator'), 'Warrior > Gladiator');
 });
 
+test("only pages reached exclusively from a race carry it (the Feat page is everyone's)", () => {
+  assert.equal(names.pages.find(p => p.n.includes('BasicFeatSelection')).race, undefined);
+  assert.ok(!names.pages.some(p => p.race === 'Human'), 'Human has no racial page of its own');
+});
+
 test('racial pages name their race', () => {
   assert.equal(names.pages.find(p => p.n.includes('TieflingHeritageSelection')).race, 'Tiefling');
 });

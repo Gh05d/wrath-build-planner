@@ -61,23 +61,39 @@ function unknown(where, what, name, outcome, context = '') {
   return warn(where, `Unknown ${what} '${name}'${context}.${hint} ${NOTE}`);
 }
 
-// A name that is unknown in one category often exists in another: a prestige class written as an archetype,
-// a racial heritage written as the race. Saying so lets the LLM fix the build instead of dropping the entry.
-function elsewhere(name, index) {
-  const asClass = match(name, index.classes.map(c => c.cand), { suggest: false });
-  if (asClass.kind === 'unique') return { kind: 'class', display: asClass.match.display };
-  for (const c of index.classes) {
-    const asArchetype = match(name, c.archetypes, { suggest: false });
-    if (asArchetype.kind === 'unique') return { kind: 'archetype', display: asArchetype.match.display, of: c.cand.display };
-  }
-  const key = normalize(name);
-  for (const page of index.pages) {
-    if (page.n.length < 2) continue;
-    const hit = page.cands.find(c => c.names.some(n => normalize(n) === key || normalize(n).startsWith(key)));
-    if (hit) return { kind: 'option', display: hit.display, page: page.cand.display, race: page.race };
-  }
-  return null;
+// A name that is unknown in one category often exists in another: a prestige class written as an archetype, an
+// archetype written as a class, a racial heritage written as the race. Saying so lets the LLM fix the build instead
+// of dropping the entry. Matches are exact (or the part before "(…)"), never a prefix: "Elven" must not find
+// "ElvenArcaneFocus".
+function asClass(name, index) {
+  const o = match(name, index.classes.map(c => c.cand), { suggest: false });
+  return o.kind === 'unique' ? o.match.display : null;
 }
+
+function asArchetype(name, index) {
+  const owners = [];
+  let display = null;
+  for (const c of index.classes) {
+    const o = match(name, c.archetypes, { suggest: false });
+    if (o.kind === 'unique') { owners.push(c.cand.display); display = o.match.display; }
+  }
+  return owners.length ? { display, of: owners } : null;
+}
+
+// Only pages that exist for one race (heritages) can tell which race a name belongs to.
+function asHeritage(name, index) {
+  const key = normalize(name);
+  const hits = [];
+  for (const page of index.pages) {
+    if (!page.race || page.n.length < 2) continue;
+    const hit = page.cands.find(c => normalize(c.display) === key || normalize(splitParenChain(c.display)?.[0]) === key);
+    if (hit) hits.push({ display: hit.display, page: page.cand.display, race: page.race });
+  }
+  const races = [...new Set(hits.map(h => h.race))];
+  return races.length === 1 ? hits[0] : null;
+}
+
+const REFUSES = 'The mod refuses a build with an unknown race, unless a mod you use adds it.';
 
 // The mod checks class and race on import (BuildValidator) and refuses the file when one is unknown.
 function refused(where, what, name, outcome) {
@@ -95,16 +111,16 @@ export function checkNames(build, index) {
   if (build.start && !blank(build.start.race)) {
     const o = match(build.start.race, index.races);
     if (o.kind === 'none') {
-      const other = elsewhere(build.start.race, index);
-      if (other?.kind === 'option' && other.race)
-        issues.push(warn('start.race', `'${build.start.race}' is not a race: '${other.display}' is a ${other.race} option on page '${other.page}'. Set "race": "${other.race}" and add { "in": "${other.page}", "pick": "${other.display}" } on level 1.`));
-      else if (other?.kind === 'option')
-        issues.push(warn('start.race', `'${build.start.race}' is not a race: '${other.display}' is an option on page '${other.page}'. Set the race it belongs to and add the option as a pick on level 1.`));
+      const heritage = asHeritage(build.start.race, index);
+      if (heritage)
+        issues.push(warn('start.race', `'${build.start.race}' is not a race: '${heritage.display}' is a ${heritage.race} option on page '${heritage.page}'. Set "race": "${heritage.race}" and add { "in": "${heritage.page}", "pick": "${heritage.display}" } on level 1. ${REFUSES}`));
       else issues.push(refused('start.race', 'race', build.start.race, o));
     }
   }
 
-  const raceName = build.start && !blank(build.start.race) ? build.start.race : null;
+  // The build's race as the game names it, so "TieflingRace" or "tiefling" compare equal to a page's race.
+  const raceMatch = build.start && !blank(build.start.race) ? match(build.start.race, index.races, { suggest: false }) : null;
+  const raceName = raceMatch?.kind === 'unique' ? raceMatch.match.display : null;
   const classes = [];
   const unknownClasses = [];   // one message per name, with all its levels
   for (const row of build.levels ?? []) {
@@ -115,17 +131,23 @@ export function checkNames(build, index) {
       const o = match(row.class, index.classes.map(c => c.cand));
       if (o.kind === 'unique') classes.push(cls = index.classes.find(c => c.cand === o.match));
       else if (o.kind === 'none') {
-        const other = elsewhere(row.class, index);
-        unknownClasses.push({ level: row.level, name: row.class, issue: other?.kind === 'archetype'
-          ? warn('', `'${row.class}' is an archetype of ${other.of}: write "class": "${other.of}" and "archetype": "${other.display}" on the first level taken in it, "class": "${other.of}" on the others.`)
-          : refused('', 'class', row.class, o) });
+        const other = asArchetype(row.class, index);
+        const owner = other?.of.length === 1 ? other.of[0] : null;
+        unknownClasses.push({ level: row.level, name: row.class, issue: owner
+          ? warn('', `'${row.class}' is an archetype of ${owner}: write "class": "${owner}" and "archetype": "${other.display}" on the first level taken in it, "class": "${owner}" on the others.`)
+          : other
+            ? warn('', `'${row.class}' is an archetype of ${other.of.join(' or ')}, not a class: write the class it belongs to, with "archetype": "${other.display}" on the first level taken in it.`)
+            : refused('', 'class', row.class, o) });
       }
     }
     if (!blank(row.archetype) && cls) {
       const o = match(row.archetype, cls.archetypes);
-      const other = o.kind === 'none' ? elsewhere(row.archetype, index) : null;
-      if (other?.kind === 'class')
-        issues.push(warn(where, `'${row.archetype}' is a class of its own, not an archetype of ${cls.cand.display}: write "class": "${other.display}" on the levels taken in it.`));
+      const isClass = o.kind === 'none' ? asClass(row.archetype, index) : null;
+      const elsewhereArchetype = o.kind === 'none' && !isClass ? asArchetype(row.archetype, index) : null;
+      if (isClass)
+        issues.push(warn(where, `'${row.archetype}' is a class of its own, not an archetype of ${cls.cand.display}: write "class": "${isClass}" on the levels taken in it.`));
+      else if (elsewhereArchetype)
+        issues.push(warn(where, `'${row.archetype}' is an archetype of ${elsewhereArchetype.of.join(' or ')}, not of ${cls.cand.display}.`));
       else if (o.kind === 'none') issues.push(unknown(where, `archetype of ${cls.cand.display}`, row.archetype, o));
     }
     checkPicks(row.picks, where, index, issues, raceName);
@@ -169,6 +191,8 @@ export function checkNames(build, index) {
 }
 
 function checkPicks(picks, where, index, issues, race) {
+  // Pages the row names with "in": a further choice can come as its own pick ({ "in": "Weapon Focus", … }).
+  const rowPages = new Set((picks ?? []).filter(p => p && typeof p === 'object' && !blank(p.in)).map(p => normalize(p.in)));
   (picks ?? []).forEach((entry, i) => {
     if (entry == null) return;
     const at = `${where} picks[${i + 1}]`;
@@ -176,6 +200,7 @@ function checkPicks(picks, where, index, issues, race) {
       ? { in: null, chain: [entry] }
       : { in: entry.in ?? null, chain: Array.isArray(entry.pick) ? entry.pick : [entry.pick] };
     pick.race = race;
+    pick.rowPages = rowPages;
     if (pick.chain.length === 0 || pick.chain.some(blank)) return;   // the format check reports it
     let pages = index.pages;
     if (!blank(pick.in)) {
@@ -248,11 +273,13 @@ function checkChain(pick, pages, at, index, issues) {
   const first = r.hits[0].match;
   let current = first.id ? index.features.get(first.id) : null;
   // A parametrized feat (weapon, school …) or a nested selection without its choice stays open in the game.
-  if (chain.length === 1) {
+  // A note, not a warning: when the guide names no weapon or school, the honest answer is to leave it open.
+  if (chain.length === 1 && !pick.rowPages.has(normalize(first.display))) {
     const sub = subCandidates(current, index);
     if (sub.length > 0) {
       const examples = sub.slice(0, 3).map(c => c.display).join(', ');
-      issues.push(warn(at, `'${chain[0]}' needs a further choice, e.g. ["${chain[0]}", "${sub[0].display}"] (choices include ${examples}${sub.length > 3 ? ', …' : ''}); without it the mod leaves the pick open.`));
+      issues.push({ error: false, note: true, where: at,
+        message: `'${chain[0]}' needs a further choice (such as ${examples}${sub.length > 3 ? ', …' : ''}). Write it as ["${chain[0]}", <choice>] if the guide names it; if the guide names none, the player chooses it in the game.` });
     }
   }
   for (let k = 1; k < chain.length; k++) {

@@ -93,6 +93,7 @@ test('a class that is an archetype says whose, once for all its levels', () => {
 test('a race that is an option on a page says where it belongs', () => {
   const [w] = checkNames({ format: 1, name: 'x', start: { race: 'Grimspawn' }, levels: [{ level: 1, class: 'Fighter' }] }, index);
   assert.match(w.message, /'Grimspawn' is not a race: 'Grimspawn \(Daemon-Spawn\)' is a Tiefling option on page 'Heritage'\. Set "race": "Tiefling"/);
+  assert.match(w.message, /The mod refuses a build with an unknown race/);
 });
 
 test('a racial page pick under another race is flagged', () => {
@@ -104,14 +105,37 @@ test('a racial page pick under its own race passes', () => {
   assert.deepEqual(checkNames({ format: 1, name: 'x', start: { race: 'Tiefling' }, levels: [{ level: 1, class: 'Fighter', picks: [{ in: 'Heritage', pick: 'Grimspawn (Daemon-Spawn)' }] }] }, index), []);
 });
 
-test('a feat that needs a further choice says so', () => {
-  const [w] = checkNames(build([{ in: 'Feat', pick: 'Weapon Focus' }]), index);
-  assert.match(w.message, /'Weapon Focus' needs a further choice, e\.g\. \["Weapon Focus", "Greatsword"\]/);
+test('a feat that needs a further choice gives a note, not a warning, and names no example to copy', () => {
+  const [n] = checkNames(build([{ in: 'Feat', pick: 'Weapon Focus' }]), index);
+  assert.equal(n.note, true);
+  assert.match(n.message, /'Weapon Focus' needs a further choice \(such as Greatsword, Longsword\)/);
+  assert.match(n.message, /if the guide names none, the player chooses it/);
+});
+
+test('the further choice given as its own pick is not flagged', () => {
+  assert.deepEqual(checkNames(build([{ in: 'Feat', pick: 'Weapon Focus' }, { in: 'Weapon Focus', pick: 'Longsword' }]), index), []);
+});
+
+test('a race hint comes only from racial pages and never from a prefix of an internal name', () => {
+  const [w] = checkNames({ format: 1, name: 'x', start: { race: 'Elven' }, levels: [{ level: 1, class: 'Fighter' }] }, index);
+  assert.doesNotMatch(w.message, /Set "race"/);
+  assert.match(w.message, /The mod refuses a build with an unknown race/);
+});
+
+test('a heritage offered to several races names no single race', () => {
+  const [w] = checkNames({ format: 1, name: 'x', start: { race: 'Adopted Elf' }, levels: [{ level: 1, class: 'Fighter' }] }, index);
+  assert.doesNotMatch(w.message, /Set "race"/);
+  assert.match(w.message, /refuses/);
+});
+
+test('the build race is compared after matching, so internal names work', () => {
+  assert.deepEqual(checkNames({ format: 1, name: 'x', start: { race: 'TieflingRace' }, levels: [{ level: 1, class: 'Fighter', picks: [{ in: 'Heritage', pick: 'Grimspawn (Daemon-Spawn)' }] }] }, index), []);
 });
 
 test('the fix request explains scores above 18', () => {
   const text = fixRequest([{ error: true, where: 'start.abilityScores', message: 'Dexterity is 19; starting scores go from 7 to 18 (before the racial bonus).' }]);
-  assert.match(text, /subtract the racial bonus/);
+  assert.match(text, /remove the racial modifier/);
+  assert.doesNotMatch(fixRequest([{ error: true, where: 'start.abilityScores', message: 'Charisma is 6; starting scores go from 7 to 18 (before the racial bonus).' }]), /racial modifier/);
 });
 
 test('no name list (Review Focus 3)', () => {

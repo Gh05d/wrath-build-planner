@@ -17,22 +17,31 @@ export function checkPointBuy(build) {
   const scores = build?.start?.abilityScores;
   if (!scores || typeof scores !== 'object') return [];
   const values = Object.fromEntries(ATTRIBUTES.map(a => [a, 10]));   // the game starts every attribute at 10
+  const given = new Set();
   for (const [key, raw] of Object.entries(scores)) {
     const name = attribute(key);
     const value = typeof raw === 'string' ? parseInt(raw, 10) : raw;
-    if (!name || !(value in COST)) return [];   // the format check reports unknown names and out-of-range values
+    // Unknown names and out-of-range values are the format check's; two keys for one attribute are ambiguous.
+    if (!name || !(value in COST) || given.has(name)) return [];
+    given.add(name);
     values[name] = value;
   }
   const cost = ATTRIBUTES.reduce((sum, a) => sum + COST[values[a]], 0);
-  // "for" other than the main character: the start block can only be a mercenary's, and a mercenary gets less.
-  const forMain = !build.for || normalize(build.for) === 'main';
-  const budget = forMain ? BUDGET : MERCENARY_BUDGET;
-  const who = forMain ? `character creation gives ${BUDGET} (main character)` : `a mercenary gets ${MERCENARY_BUDGET}`;
-  if (cost > budget)
-    return [warning(`These scores cost ${cost} points; ${who}, so the mod cannot reach them all. Lower some scores, or check whether the guide gives final scores that include racial bonuses.`)];
-  // The game keeps Next disabled while points are unspent ("There are unspent points …").
-  if (cost < budget)
-    return [warning(`These scores cost ${cost} points; ${who}, and all points must be spent before the game lets you continue. Raise some scores so they add up to ${budget}.`)];
+  const complete = given.size === ATTRIBUTES.length;   // with scores missing, the player spends the rest by hand
+  const lower = 'Lower some scores, or check whether the guide gives final scores that include racial bonuses.';
+
+  // "for" is a free-text hint: only a missing value or "main" pins the main character's 25 points.
+  if (!build.for || normalize(build.for) === 'main') {
+    if (cost > BUDGET)
+      return [warning(`These scores cost ${cost} points; character creation gives ${BUDGET} (main character), so the mod cannot reach them all. ${lower}`)];
+    // The game keeps Next disabled while points are unspent ("There are unspent points …").
+    if (cost < BUDGET && complete)
+      return [warning(`These scores cost ${cost} points; character creation gives ${BUDGET} (main character), and all points must be spent before the game lets you continue. Raise some scores so they add up to ${BUDGET}.`)];
+    return [];
+  }
+  if (cost === BUDGET || cost === MERCENARY_BUDGET) return [];
+  if (cost > BUDGET || complete)
+    return [warning(`These scores cost ${cost} points; the main character gets ${BUDGET}, a mercenary ${MERCENARY_BUDGET}, and all points must be spent before the game lets you continue. Adjust the scores to one of the two.`)];
   return [];
 }
 

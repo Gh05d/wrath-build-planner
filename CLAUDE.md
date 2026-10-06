@@ -50,7 +50,8 @@ Spec: `pathfinder-mods/docs/superpowers/specs/2026-10-04-wrath-build-planner-aut
 - `site/js/match.js` and `site/js/validate.js` port `Core/NameMatcher` and `Core/BuildValidator`; `tests/vectors/` run against both. Change the C# side first, then the vectors, then the port.
 - `site/data/vocabulary.json` is generated from `Core/Vocabulary` (`UPDATE_VOCABULARY=1` on the unit tests).
 - `site/data/names.json` comes from the running game: `bash tools/export-names.sh` (game in English, DevBridge, main menu is enough). Re-export after a game patch that changes content; `tests/site/names-data.test.mjs` checks it.
-- Pages reached from a race's features carry `"race"` in `names.json`; the checker uses it to name a heritage's race and to flag a heritage picked under another race.
+- Pages reached only from a race's features carry `"race"` in `names.json` (races are walked last: walked first, the Human bonus feat tagged the whole Feat page as Human). The checker uses it to name a heritage's race and to flag a heritage picked under another race; its cross-category hints match exact names only, never prefixes.
+- Checker notes vs. warnings: anything the honest answer to is "the guide leaves it open" (bare picks, a weapon/school choice) is a note and stays out of the fix request; warnings go to the LLM.
 - Acceptance inputs (guide pages) come from `tools/fetch-guide.cjs` (Playwright, installed Chrome): Fextralife and Steam refuse plain curl.
 - The checker resolves names page by page: several selections share one title (eight are "Bonus Combat Feat"), and in the game only one of them is open.
 - A format change touches prompt (`site/js/prompt.js`), checker and vectors in the same commit. Prompt limit: 7,500 characters (user decision 2026-10-06; 6,617 at the first export).
