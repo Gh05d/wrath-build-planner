@@ -23,7 +23,7 @@ test('typo gets a suggestion', () => {
   const [w] = checkNames(build([{ in: 'Feat', pick: 'Power Atack' }]), index);
   assert.equal(w.error, false);
   assert.equal(w.where, 'levels[level 1] picks[1]');
-  assert.match(w.message, /Unknown option on page 'Feat' 'Power Atack'.*Did you mean: Power Attack\?/);
+  assert.match(w.message, /Unknown option 'Power Atack' on page 'Feat'.*Did you mean: Power Attack\?/);
 });
 
 test('unknown page', () => {
@@ -61,6 +61,20 @@ test('class, archetype, race, path, spells', () => {
   assert.ok(messages.some(m => /Unknown mythic path 'Angle'.*Angel/.test(m)));
 });
 
+test('an empty chain adds no name warning next to the format error', () => {
+  assert.deepEqual(checkNames(build([{ in: 'Feat', pick: [] }]), index), []);
+});
+
+test('the several-pages warning names only titles players see', () => {
+  const [w] = checkNames(build(['Power Attack']), index);
+  assert.doesNotMatch(w.message, /InternalOnlySelection/);
+});
+
+test('an unknown class or race says the mod refuses the file', () => {
+  const messages = checkNames({ format: 1, name: 'x', start: { race: 'Hooman' }, levels: [{ level: 1, class: 'Wizzard' }] }, index).map(i => i.message);
+  assert.ok(messages.every(m => /refuse/.test(m) && !/Fine if/.test(m)), messages.join('\n'));
+});
+
 test('no name list (Review Focus 3)', () => {
   const issues = checkNames(build(['Power Attack']), null);
   assert.equal(issues.length, 1);
@@ -82,6 +96,16 @@ test('shipped example build: no errors, no warnings', () => {
   const example = read('../../Builds-examples/two-handed-fighter.json');
   const issues = [...validate(example, { vocab, known: null }), ...checkNames(example, real)];
   assert.deepEqual(issues, []);
+});
+
+test('sixty picks without "in" are checked fast (Important 1)', () => {
+  const names = ['Power Attack', 'Dodge', 'Cleave', 'Toughness', 'Power Atack', 'Dodgee', 'Weapon Focus (Greatsword)', 'Improved Initiative', 'Clevae', 'Iron Will'];
+  const levels = Array.from({ length: 6 }, (_, i) => ({ level: i + 1, class: 'Fighter', picks: names }));
+  const started = performance.now();
+  checkNames({ format: 1, name: 'x', levels }, real);
+  const ms = performance.now() - started;
+  console.log(`60 bare picks: ${Math.round(ms)} ms`);
+  assert.ok(ms < 1000, `${Math.round(ms)} ms`);
 });
 
 test('test builds: no format errors', () => {

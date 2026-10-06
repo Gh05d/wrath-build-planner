@@ -1,5 +1,5 @@
 import { extractJson } from './extract.js';
-import { validate } from './validate.js';
+import { validate, canonicalize } from './validate.js';
 import { indexNames, checkNames } from './names-check.js';
 import { fixRequest } from './fix.js';
 import { buildPrompt, EXAMPLE } from './prompt.js';
@@ -16,6 +16,8 @@ async function loadJson(url) {
 }
 
 async function init() {
+  // A paste while the data loads must not be replaced by the stored text, and is checked once the data is in.
+  $('answer').addEventListener('input', debounce(run, 300));
   const [vocab, names] = await Promise.allSettled([loadJson('data/vocabulary.json'), loadJson('data/names.json')]);
   if (vocab.status === 'fulfilled') state.vocab = vocab.value;
   else showBanner('The page data could not be loaded. Reload the page; if you opened the file directly, use the published page instead.');
@@ -25,6 +27,8 @@ async function init() {
     $('names-version').textContent = `Names from game version ${state.names.meta.gameVersion}, exported ${state.names.meta.exported}.`;
   } else {
     $('names-version').textContent = 'The name list could not be loaded: names are not checked.';
+    $('prompt-note').textContent = 'The name list could not be loaded, so the prompt lists only the most common page titles.';
+    $('prompt-note').hidden = false;
     $('download-names').disabled = true;
   }
 
@@ -37,9 +41,9 @@ async function init() {
   $('download').addEventListener('click', download);
   $('download-names').addEventListener('click', downloadNames);
   $('search').addEventListener('input', debounce(() => renderSearch($('search').value), 150));
-  $('answer').addEventListener('input', debounce(run, 300));
-
-  try { $('answer').value = localStorage.getItem(STORE_KEY) ?? ''; } catch { /* storage blocked */ }
+  if (!$('answer').value) {
+    try { $('answer').value = localStorage.getItem(STORE_KEY) ?? ''; } catch { /* storage blocked */ }
+  }
   run();
 }
 
@@ -51,6 +55,16 @@ function updatePrompt() {
 }
 
 function run() {
+  try {
+    check();
+  } catch (e) {
+    state.clean = null;
+    state.issues = [{ error: true, where: '', message: `The checker failed on this text (${e.message}). Please report it with the text you pasted.` }];
+    render('The build could not be checked.');
+  }
+}
+
+function check() {
   const text = $('answer').value;
   try { localStorage.setItem(STORE_KEY, text); } catch { /* storage blocked */ }
   state.clean = null;
@@ -60,17 +74,20 @@ function run() {
   const extracted = extractJson(text);
   const issues = extracted.notes.map(message => ({ error: false, note: true, where: '', message }));
   if (extracted.error) {
-    issues.push({ error: true, where: '', message: extracted.error.message });
+    // No build at all (prompt pasted, no JSON): nothing an AI could fix, so no fix request.
+    issues.push({ error: true, where: '', message: extracted.error.message, noBuild: !/not valid/.test(extracted.error.message) });
     state.issues = issues;
     render('The build could not be read.');
     return;
   }
-  if (state.vocab) issues.push(...validate(extracted.value, { vocab: state.vocab, known: null }));
-  if (!issues.some(i => i.structure)) issues.push(...checkNames(extracted.value, state.index));
+  const { build, renamed } = canonicalize(extracted.value);
+  if (renamed.length) issues.push({ error: false, note: true, where: '', message: `Wrote the field names ${renamed.join(', ')} in the spelling the format uses.` });
+  if (state.vocab) issues.push(...validate(build, { vocab: state.vocab, known: null }));
+  if (!issues.some(i => i.structure)) issues.push(...checkNames(build, state.index));
   state.issues = issues;
-  state.value = extracted.value;
-  state.clean = extracted.text;
-  render(summary(extracted.value, issues));
+  state.value = build;
+  state.clean = JSON.stringify(build, null, 2);
+  render(summary(build, issues));
 }
 
 function summary(build, issues) {
@@ -104,7 +121,7 @@ function render(text) {
     return li;
   }));
   const hasErrors = state.issues.some(i => i.error);
-  $('copy-fix').disabled = !state.issues.some(i => !i.note);
+  $('copy-fix').disabled = !state.issues.some(i => !i.note) || state.issues.some(i => i.noBuild);
   $('copy-json').disabled = !state.clean || hasErrors;
   $('download').disabled = !state.clean || hasErrors;
 }
@@ -126,7 +143,7 @@ async function copy(text, button) {
     try { ok = document.execCommand('copy'); } catch { ok = false; }
     area.remove();
   }
-  flash(button, ok ? 'Copied' : 'Copy failed — use "Show the prompt" and copy by hand');
+  flash(button, ok ? 'Copied' : button.id === 'copy-prompt' ? 'Copy failed — open "Show the prompt" and copy it by hand' : 'Copy failed — your browser blocked the clipboard');
 }
 
 function flash(button, text) {

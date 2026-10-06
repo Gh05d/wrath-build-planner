@@ -18,6 +18,7 @@
     { "n": ["Feat", "Feat", "BasicFeatSelection"], "items": ["f1", "f2", "f3"] },
     { "n": ["Bonus Combat Feat", "Combat Feat", "FighterFeatSelection"], "items": ["f1", "f2"] },
     { "n": ["Background Selection", "Background", "BackgroundsBaseSelection"], "items": ["f4"] },
-    { "n": ["Bonus Combat Feat", "LichSkeletalCombatParametrized"], "params": [["Weapon Focus"], ["Dodge"]] }
+    { "n": ["Bonus Combat Feat", "LichSkeletalCombatParametrized"], "params": [["Weapon Focus"], ["Dodge"]] },
+    { "n": ["InternalOnlySelection"], "items": ["f1"] }
   ]
 }

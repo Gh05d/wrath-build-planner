@@ -31,7 +31,8 @@
         <label><input type="radio" name="variant" value="guide" checked> I have a guide</label>
         <label><input type="radio" name="variant" value="design"> Design a build for me</label>
       </div>
-      <button id="copy-prompt" class="primary">Copy prompt</button>
+      <button id="copy-prompt" class="primary" disabled>Copy prompt</button>
+      <p id="prompt-note" class="hint" hidden></p>
       <p class="hint">Paste it into your AI, then replace the last line with the guide's text or table (for a video: its description). Many AIs cannot open links, so paste the text itself.</p>
       <details><summary>Show the prompt</summary><pre id="prompt-preview"></pre></details>
     </section>
@@ -43,7 +44,7 @@
 
     <section class="step">
       <h2><span class="num">3</span> Check</h2>
-      <p id="summary" class="summary">Nothing pasted yet.</p>
+      <p id="summary" class="summary" aria-live="polite">Nothing pasted yet.</p>
       <ol id="issues" class="issues"></ol>
       <button id="copy-fix" disabled>Copy fix request</button>
       <p class="hint">Send the fix request to your AI and paste its new answer above. Prerequisites, free spell slots and whether a page appears on a level are checked by the mod when you press Apply build.</p>

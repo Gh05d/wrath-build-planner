@@ -1,6 +1,9 @@
 // The prompt the player copies into their LLM. Page titles and word lists come from the data files,
 // so they follow the game and the mod.
 
+// The prompt's first sentence; extract.js uses it to notice a pasted prompt.
+export const PROMPT_START = 'You convert character builds for Pathfinder: Wrath of the Righteous into a file for the mod "Wrath Build Planner".';
+
 export const EXAMPLE = `{
   "format": 1,
   "name": "Two-Handed Fighter",
@@ -58,7 +61,7 @@ export function buildPrompt(names, vocab, variant) {
   const titles = names ? pageTitles(names) : FALLBACK_TITLES;
   const skills = Object.values(vocab.skills).map(s => s[0]);
   const alignments = Object.values(vocab.alignments).map(s => s[0]);
-  return `You convert character builds for Pathfinder: Wrath of the Righteous into a file for the mod "Wrath Build Planner".
+  return `${PROMPT_START}
 
 Output only the build as JSON in one code block. After the block you may add a short list headed "Left out:" with what you could not convert. Write nothing else.
 

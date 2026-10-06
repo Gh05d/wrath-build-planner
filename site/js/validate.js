@@ -120,6 +120,32 @@ function rows(list, name, kind, issues) {
   });
 }
 
+// ---- field-name case ----
+
+// Newtonsoft matches [JsonProperty] names regardless of case, so "Levels" imports like "levels". The pick
+// converter (PickEntryConverter) does not: its "in"/"pick" switch is case-sensitive, so pick keys stay as written.
+export function canonicalize(input) {
+  const renamed = [];
+  const fix = (obj, kind) => {
+    if (!isObject(obj)) return obj;
+    const out = {};
+    for (const [key, value] of Object.entries(obj)) {
+      const canonical = FIELDS[kind].find(f => f.toLowerCase() === key.toLowerCase());
+      const name = canonical && !(canonical in obj && canonical !== key) ? canonical : key;
+      if (name !== key) renamed.push(key);
+      out[name] = value;
+    }
+    return out;
+  };
+  const build = fix(input, 'top');
+  if (isObject(build)) {
+    if (isObject(build.start)) build.start = fix(build.start, 'start');
+    if (Array.isArray(build.levels)) build.levels = build.levels.map(r => fix(r, 'level'));
+    if (Array.isArray(build.mythic)) build.mythic = build.mythic.map(r => fix(r, 'mythic'));
+  }
+  return { build, renamed };
+}
+
 // ---- rules (BuildValidator) ----
 
 function vocabularyOf(vocab) {

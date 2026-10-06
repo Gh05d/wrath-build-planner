@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { validate } from '../../site/js/validate.js';
+import { validate, canonicalize } from '../../site/js/validate.js';
 import { match } from '../../site/js/match.js';
 
 const vocab = JSON.parse(readFileSync(new URL('../../site/data/vocabulary.json', import.meta.url)));
@@ -39,4 +39,16 @@ test('pick shapes', () => {
   assert.deepEqual(validate(ok, { vocab, known: null }), []);
   const bad = { format: 1, name: 'x', levels: [{ level: 1, class: 'Fighter', picks: [{ in: 'Feat', pick: { a: 1 } }] }] };
   assert.ok(validate(bad, { vocab, known: null })[0].structure);
+});
+
+test('field names in another case are accepted like Newtonsoft does', () => {
+  const { build, renamed } = canonicalize({ Format: 1, Name: 'x', Levels: [{ Level: 1, Class: 'Fighter', Picks: ['Dodge'] }] });
+  assert.deepEqual(validate(build, { vocab, known: null }), []);
+  assert.deepEqual(build.levels[0].picks, ['Dodge']);
+  assert.ok(renamed.includes('Levels'));
+});
+
+test("pick object keys stay case-sensitive, as the mod's PickEntryConverter is", () => {
+  const { build } = canonicalize({ format: 1, name: 'x', levels: [{ level: 1, class: 'Fighter', picks: [{ In: 'Feat', pick: 'Dodge' }] }] });
+  assert.ok(validate(build, { vocab, known: null }).some(i => i.structure));
 });

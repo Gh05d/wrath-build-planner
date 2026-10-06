@@ -49,6 +49,8 @@ textarea, input[type=search] {
   padding: 12px; font: 14px/1.45 ui-monospace, "SFMono-Regular", Consolas, monospace;
 }
 input[type=search] { font-family: inherit; font-size: 1rem; margin: 12px 0; }
+/* 16px keeps iOS from zooming in when the field gets focus. */
+textarea { font-size: 16px; }
 pre {
   background: var(--paper); color: var(--ink); padding: 12px; border-radius: var(--radius);
   overflow-x: auto; font-size: 13px; white-space: pre-wrap; word-break: break-word;

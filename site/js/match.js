@@ -42,7 +42,8 @@ export function splitParenChain(text) {
   return head.length > 0 && tail.length > 0 ? [head, tail] : null;
 }
 
-export function match(wanted, candidates) {
+// suggest: false skips the similarity hints (the slow part) for callers that only need the decision.
+export function match(wanted, candidates, { suggest: withSuggestions = true } = {}) {
   const outcome = { kind: 'none', match: null, tied: [], suggestions: [] };
   const key = normalize(wanted);
   if (key.length === 0 || !candidates || candidates.length === 0) return outcome;
@@ -50,7 +51,7 @@ export function match(wanted, candidates) {
   if (decide(exact, outcome)) return outcome;
   const stripped = candidates.filter(c => c.names.some(n => normalize(stripCategory(n)) === key));
   if (decide(stripped, outcome)) return outcome;
-  outcome.suggestions = suggest(key, candidates);
+  if (withSuggestions) outcome.suggestions = suggest(key, candidates);
   return outcome;
 }
 
@@ -69,16 +70,18 @@ function decide(hits, outcome) {
 // Hints for the human only: names that contain the wanted text (or vice versa), then near-typos.
 function suggest(key, candidates) {
   const scored = [];
+  const allowed = Math.max(2, Math.floor(key.length / 4));
   for (const c of candidates) {
     let best = Infinity;
     for (const name of c.names) {
       const n = normalize(name);
       if (n.length === 0) continue;
       if (n.includes(key) || key.includes(n)) { best = 0; break; }
+      // The distance is at least the length difference: beyond the allowance it cannot become a hint.
+      if (Math.abs(n.length - key.length) > allowed) continue;
       const d = editDistance(key, n);
       if (d < best) best = d;
     }
-    const allowed = Math.max(2, Math.floor(key.length / 4));
     if (best <= allowed) scored.push([best, c.display]);
   }
   scored.sort((a, b) => a[0] - b[0]);   // stable, like LINQ OrderBy
