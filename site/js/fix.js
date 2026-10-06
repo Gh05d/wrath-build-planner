@@ -6,6 +6,6 @@ export function fixRequest(issues) {
     '',
     ...lines,
     '',
-    'Keep everything else unchanged. Leave out what you are unsure of instead of guessing.',
+    'Keep everything else unchanged. Where a suggestion is the name the guide means, use it; leave out only what you cannot match.',
   ].join('\n');
 }

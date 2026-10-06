@@ -85,7 +85,9 @@ test('fix request lists every problem', () => {
   const text = fixRequest([{ error: true, where: 'levels[level 1]', message: 'A.' }, { error: false, where: '', message: 'B.' }]);
   assert.match(text, /^Fix these problems/);
   assert.match(text, /1\. levels\[level 1\]: A\.\n2\. B\./);
-  assert.match(text, /Leave out what you are unsure of/);
+  // A plain "leave out what you are unsure of" made Haiku drop correct picks instead of taking the suggestion (2026-10-06).
+  assert.match(text, /Where a suggestion is the name the guide means, use it; leave out only what you cannot match\./);
+  assert.doesNotMatch(text, /Leave out what you are unsure of/);
 });
 
 // End to end with the real export (Task 7).
