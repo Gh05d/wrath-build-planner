@@ -4,6 +4,10 @@ Follow a character build from a guide without comparing every level by hand. Imp
 small text file, assign it to a character, and press **Apply build** in the level-up or character
 creation window. The mod makes the picks for that level; you look them over and press Complete.
 
+**Share your builds:** have a build that works well, or know a popular one from a guide? Send it in and it
+can ship with the mod for everyone — post it on the Nexus page, send a private message there, or
+[open an issue](https://github.com/Gh05d/wrath-build-planner/issues). Say how you want to be credited.
+
 ## How it works
 
 1. Put a build file (`.json`) into `Mods/WrathBuildPlanner/Builds/`, or open the Builds window

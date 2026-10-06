@@ -71,3 +71,4 @@ pre {
 .results small { color: var(--muted); display: block; }
 .howto li { margin: 4px 0; }
 code { color: var(--paper); overflow-wrap: anywhere; }
+.share a { color: var(--accent); }
