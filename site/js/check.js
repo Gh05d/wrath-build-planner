@@ -42,5 +42,8 @@ function summary(build, issues) {
   const range = levels.length ? `Levels ${Math.min(...levels)}–${Math.max(...levels)}` : 'No levels';
   const mythic = (build.mythic ?? []).filter(Boolean).length;
   const n = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
-  return `${build.name ?? 'Unnamed build'}: ${range}${mythic ? `, ${n(mythic, 'mythic rank')}` : ''}, ${n(picks, 'pick')} — ${n(errors, 'error')}, ${n(warnings, 'warning')}.`;
+  const notes = issues.filter(i => i.note).length;
+  // Notes are listed apart from the problems; say plainly that they leave the build ready.
+  const verdict = errors || warnings ? '.' : ` — ready for the game.${notes ? ` ${n(notes, 'note')} below, nothing to fix.` : ''}`;
+  return `${build.name ?? 'Unnamed build'}: ${range}${mythic ? `, ${n(mythic, 'mythic rank')}` : ''}, ${n(picks, 'pick')} — ${n(errors, 'error')}, ${n(warnings, 'warning')}${verdict}`;
 }

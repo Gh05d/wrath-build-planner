@@ -335,7 +335,7 @@ function checkChain(pick, pages, at, index, issues) {
     if (sub.length > 0) {
       const examples = sub.slice(0, 3).map(c => c.display).join(', ');
       issues.push({ error: false, note: true, where: at,
-        message: `'${chain[0]}' needs a further choice (such as ${examples}${sub.length > 3 ? ', …' : ''}). Write it as ["${chain[0]}", <choice>] if the guide names it; if the guide names none, the player chooses it in the game.` });
+        message: `'${chain[0]}' needs a further choice (such as ${examples}${sub.length > 3 ? ', …' : ''}). The player chooses it in the game; if the guide names one, add it as ["${chain[0]}", <choice>].` });
     }
   }
   for (let k = 1; k < chain.length; k++) {

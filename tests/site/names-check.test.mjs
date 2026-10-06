@@ -109,7 +109,8 @@ test('a feat that needs a further choice gives a note, not a warning, and names 
   const [n] = checkNames(build([{ in: 'Feat', pick: 'Weapon Focus' }]), index);
   assert.equal(n.note, true);
   assert.match(n.message, /'Weapon Focus' needs a further choice \(such as Greatsword, Longsword\)/);
-  assert.match(n.message, /if the guide names none, the player chooses it/);
+  // Written for the player reading the page: nothing to fix, chosen in the game.
+  assert.match(n.message, /The player chooses it in the game; if the guide names one, add it as \["Weapon Focus", <choice>\]\./);
 });
 
 test('the further choice given as its own pick is not flagged', () => {

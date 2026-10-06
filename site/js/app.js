@@ -77,27 +77,35 @@ function check() {
 
 function render(text) {
   $('summary').textContent = text;
-  const list = $('issues');
-  list.replaceChildren(...state.issues.map(issue => {
-    const li = document.createElement('li');
-    const kind = issue.error ? 'error' : issue.note ? 'note' : 'warning';
-    li.className = kind;
-    const tag = document.createElement('span');
-    tag.className = 'tag';
-    tag.textContent = kind;
-    li.append(tag, issue.message);
-    if (issue.where) {
-      const where = document.createElement('span');
-      where.className = 'where';
-      where.textContent = issue.where;
-      li.append(where);
-    }
-    return li;
-  }));
+  // Problems (errors, warnings) in the numbered list; notes apart, since they need nothing from the player.
+  $('issues').replaceChildren(...state.issues.filter(i => !i.note).map(item));
+  const notes = state.issues.filter(i => i.note);
+  $('notes').replaceChildren(...notes.map(item));
+  $('notes-box').hidden = notes.length === 0;
   const hasErrors = state.issues.some(i => i.error);
   $('copy-fix').disabled = !state.canFix;
   $('copy-json').disabled = !state.clean || hasErrors;
   $('download').disabled = !state.clean || hasErrors;
+}
+
+function item(issue) {
+  const li = document.createElement('li');
+  const kind = issue.error ? 'error' : issue.note ? 'note' : 'warning';
+  li.className = kind;
+  if (!issue.note) {   // the notes box has its own heading
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = kind;
+    li.append(tag);
+  }
+  li.append(issue.message);
+  if (issue.where) {
+    const where = document.createElement('span');
+    where.className = 'where';
+    where.textContent = issue.where;
+    li.append(where);
+  }
+  return li;
 }
 
 async function copy(text, button) {

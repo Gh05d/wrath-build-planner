@@ -61,11 +61,15 @@ pre {
 .issues li.error::marker { color: var(--error); }
 .issues li.warning::marker { color: var(--warn); }
 .issues li.note::marker { color: var(--note); }
-.issues .where { color: var(--muted); font-family: ui-monospace, Consolas, monospace; font-size: 0.85rem; display: block; }
+.issues .where, .notes .where { color: var(--muted); font-family: ui-monospace, Consolas, monospace; font-size: 0.85rem; display: block; }
 .tag { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-right: 6px; }
 .error .tag { color: var(--error); }
 .warning .tag { color: var(--warn); }
 .note .tag { color: var(--note); }
+.notes { border-left: 3px solid var(--note); padding: 4px 0 4px 14px; margin: 12px 0; }
+.notes h3 { font-size: 0.95rem; margin: 0 0 4px; color: var(--note); }
+.notes ul { margin: 0; padding-left: 18px; color: var(--muted); }
+.notes li { margin: 6px 0; overflow-wrap: anywhere; }
 .results { list-style: none; padding: 0; max-height: 360px; overflow-y: auto; }
 .results li { padding: 6px 0; border-bottom: 1px solid #3a2e24; overflow-wrap: anywhere; }
 .results small { color: var(--muted); display: block; }

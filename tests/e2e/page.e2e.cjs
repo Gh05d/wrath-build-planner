@@ -92,6 +92,8 @@ const EXAMPLE = fs.readFileSync(path.join(__dirname, '..', '..', 'Builds-example
   await paste(`Sure! Here it is:\n\`\`\`json\n${EXAMPLE}\n\`\`\`\n\`\`\`\nLeft out:\n- nothing\n\`\`\``);
   check(/0 errors, 0 warnings/.test(await summary()), 'example answer: 0 errors, 0 warnings', await summary());
   check(!(await disabled('#copy-json')), 'Copy JSON enabled for a clean build');
+  check(await page.$eval('#notes-box', el => el.hidden) && (await issues()).length === 0, 'a clean build shows no problem list and no notes box');
+
   await page.click('#copy-json');
   const copied = await clipboard();
   let parsed = null;
@@ -99,6 +101,14 @@ const EXAMPLE = fs.readFileSync(path.join(__dirname, '..', '..', 'Builds-example
   check(parsed?.name === 'Two-Handed Fighter' && !copied.includes('Left out'), 'Copy JSON gives the clean build only');
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#download')]);
   check(download.suggestedFilename() === 'two-handed-fighter.json', 'download name from the build name', download.suggestedFilename());
+
+  // Only notes left (a weapon the guide does not name): no problem list, the notes apart and marked as nothing to fix.
+  await paste(JSON.stringify({ format: 1, name: 'Notes only', levels: [{ level: 1, class: 'Fighter', picks: [{ in: 'Feat', pick: 'Weapon Focus' }] }] }));
+  check(/ready for the game\. 1 note below, nothing to fix/.test(await summary()), 'only notes: the summary says ready', await summary());
+  check((await issues()).length === 0, 'only notes: nothing in the problem list');
+  check(!(await page.$eval('#notes-box', el => el.hidden)) && /nothing to fix/i.test(await page.textContent('#notes-box'))
+    && (await page.$$('#notes li')).length === 1, 'only notes: one note in its own box, headed as nothing to fix');
+  check(await disabled('#copy-fix') && !(await disabled('#copy-json')), 'only notes: no fix request, Copy JSON enabled');
 
   // A name that tries to be HTML, and a file name that tries to escape.
   await paste(JSON.stringify({ format: 1, name: '<img src=x onerror="window.__xss=1">../../evil 🐉', levels: [{ level: 1, class: '<b>Fighter</b>' }] }));

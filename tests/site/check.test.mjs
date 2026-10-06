@@ -21,7 +21,18 @@ test('a clean build: ok, clean JSON, summary', () => {
   const r = checkText('Sure!\n```json\n' + EXAMPLE + '\n```', { vocab, index });
   assert.equal(r.ok, true);
   assert.equal(JSON.parse(r.clean).name, 'Two-Handed Fighter');
-  assert.match(r.summary, /^Two-Handed Fighter: .* 0 errors, 0 warnings\.$/);
+  assert.match(r.summary, /^Two-Handed Fighter: .* 0 errors, 0 warnings — ready for the game\.$/);
+});
+
+test('only notes left: ready for the game, the notes counted as nothing to fix', () => {
+  const r = checkText(JSON.stringify({ format: 1, name: 'x', levels: [{ level: 1, class: 'Fighter', picks: [{ in: 'Feat', pick: 'Weapon Focus' }] }] }), { vocab, index });
+  assert.equal(r.ok, true);
+  assert.match(r.summary, /0 errors, 0 warnings — ready for the game\. 1 note below, nothing to fix\.$/);
+});
+
+test('with a warning the summary does not say ready', () => {
+  const r = checkText(JSON.stringify({ format: 1, name: 'x', levels: [{ level: 1, class: 'Fightr' }] }), { vocab, index });
+  assert.doesNotMatch(r.summary, /ready/);
 });
 
 test('nothing pasted: no summary, nothing to fix', () => {
