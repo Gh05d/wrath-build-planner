@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Build Planner Authoring</title>
+  <title>Wrath Build Planner</title>
   <meta name="description" content="Turn a Pathfinder: Wrath of the Righteous build guide into a Wrath Build Planner file with ChatGPT, Claude or any chat AI.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Source+Sans+3:wght@400;600&display=swap">
@@ -13,7 +13,7 @@
 <body>
   <header>
     <h1>Wrath Build Planner</h1>
-    <p class="lead">Turn a build guide into a file the mod can apply — with ChatGPT, Claude or any other chat AI you already use.</p>
+    <p class="lead">A mod for Pathfinder: Wrath of the Righteous that applies your character build level by level — and this page turns any build guide into a build for it, with ChatGPT, Claude or any other chat AI.</p>
     <p id="banner" class="banner" hidden></p>
     <script>
       // Browsers do not run the page's modules from file://, so app.js cannot say this itself.
@@ -26,6 +26,20 @@
   </header>
 
   <main>
+    <section id="about" class="about">
+      <h2>What is this?</h2>
+      <p><b>Wrath Build Planner</b> is a free mod for Pathfinder: Wrath of the Righteous. You keep a character build — from a guide, or made with an AI on this page — as a small file. In the game, the mod makes each level's picks for you in the level-up and character-creation window: class, feats, spells, ability scores and more. You look them over and confirm the level yourself.</p>
+      <figure>
+        <img src="img/in-game.jpg" width="1280" height="800" alt="The character-creation window after Apply build: the mod's bar at the bottom left, the list of applied picks at the bottom right.">
+        <figcaption>Character creation after <b>Apply build</b>: the mod's bar bottom left, what it set bottom right.</figcaption>
+      </figure>
+      <p>The mod needs <a href="https://www.nexusmods.com/site/mods/21">Unity Mod Manager</a>. This page helps you create the build files it reads.</p>
+      <div class="row">
+        <a id="get-mod" class="button primary" href="https://github.com/Gh05d/wrath-build-planner/releases">Get the mod</a>
+        <a class="button" href="https://github.com/Gh05d/wrath-build-planner#readme">How the mod works</a>
+      </div>
+    </section>
+
     <section class="step">
       <h2><span class="num">1</span> Copy the prompt</h2>
       <div class="switch" role="radiogroup" aria-label="What do you have?">

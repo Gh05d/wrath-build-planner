@@ -51,6 +51,12 @@ const EXAMPLE = fs.readFileSync(path.join(__dirname, '..', '..', 'Builds-example
   await page.waitForFunction(() => !document.getElementById('copy-prompt').disabled, null, { timeout: 15000 });
   check(true, 'page loads and enables Copy prompt');
 
+  // A visitor who never heard of the mod learns what it is and where to get it.
+  const intro = await page.textContent('#about');
+  check(/mod for Pathfinder: Wrath of the Righteous/.test(intro) && /Unity Mod Manager/.test(intro), 'intro says what the mod is and what it needs');
+  check(await page.$eval('#get-mod', a => /github\.com\/Gh05d\/wrath-build-planner\/releases|nexusmods\.com/.test(a.href)), 'a link to get the mod');
+  check(await page.$eval('#about img', img => img.complete && img.naturalWidth > 0), 'the in-game screenshot loads');
+
   // Step 1: prompt and variants.
   await page.click('#copy-prompt');
   const prompt = await clipboard();

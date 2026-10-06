@@ -72,3 +72,13 @@ pre {
 .howto li { margin: 4px 0; }
 code { color: var(--paper); overflow-wrap: anywhere; }
 .share a { color: var(--accent); }
+.about { background: var(--panel); border: 1px solid #4a3a2c; border-radius: var(--radius); padding: 20px; margin: 20px 0; }
+.about figure { margin: 16px 0; }
+.about img { width: 100%; height: auto; border-radius: var(--radius); display: block; }
+.about figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
+.about a { color: var(--accent); }
+a.button {
+  display: inline-block; text-decoration: none; font: 600 1rem "Source Sans 3", sans-serif; padding: 10px 18px;
+  border-radius: var(--radius); border: 1px solid var(--accent); color: var(--paper);
+}
+a.button.primary { background: var(--accent); color: var(--ink); }
