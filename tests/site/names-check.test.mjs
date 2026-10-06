@@ -94,6 +94,11 @@ test('a racial page pick under its own race passes', () => {
   assert.deepEqual(checkNames({ format: 1, name: 'x', start: { race: 'Tiefling' }, levels: [{ level: 1, class: 'Fighter', picks: [{ in: 'Heritage', pick: 'Grimspawn (Daemon-Spawn)' }] }] }, index), []);
 });
 
+test('a feat that needs a further choice says so', () => {
+  const [w] = checkNames(build([{ in: 'Feat', pick: 'Weapon Focus' }]), index);
+  assert.match(w.message, /'Weapon Focus' needs a further choice, e\.g\. \["Weapon Focus", "Greatsword"\]/);
+});
+
 test('the fix request explains scores above 18', () => {
   const text = fixRequest([{ error: true, where: 'start.abilityScores', message: 'Dexterity is 19; starting scores go from 7 to 18 (before the racial bonus).' }]);
   assert.match(text, /subtract the racial bonus/);

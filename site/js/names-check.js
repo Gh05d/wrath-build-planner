@@ -224,6 +224,14 @@ function checkChain(pick, pages, at, index, issues) {
   }
   const first = r.hits[0].match;
   let current = first.id ? index.features.get(first.id) : null;
+  // A parametrized feat (weapon, school …) or a nested selection without its choice stays open in the game.
+  if (chain.length === 1) {
+    const sub = subCandidates(current, index);
+    if (sub.length > 0) {
+      const examples = sub.slice(0, 3).map(c => c.display).join(', ');
+      issues.push(warn(at, `'${chain[0]}' needs a further choice, e.g. ["${chain[0]}", "${sub[0].display}"] (choices include ${examples}${sub.length > 3 ? ', …' : ''}); without it the mod leaves the pick open.`));
+    }
+  }
   for (let k = 1; k < chain.length; k++) {
     const sub = subCandidates(current, index);
     if (sub.length === 0) { issues.push(warn(at, `'${chain[k - 1]}' offers no further choice.`)); return; }
