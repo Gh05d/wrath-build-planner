@@ -349,7 +349,8 @@ namespace WrathBuildPlanner.UI {
             lines.Add(Strings.Format("bar.result", report.AppliedCount, report.OpenCount));
             foreach (var step in report.Steps.OrderBy(s => s.Status == StepStatus.Open ? 0 : 1)) {
                 if (step.Status != StepStatus.Open) {
-                    lines.Add($"+ {step.Label} — {(step.Status == StepStatus.Applied ? "status.applied" : "status.already").i18n()}");
+                    string line0 = $"+ {step.Label} — {(step.Status == StepStatus.Applied ? "status.applied" : "status.already").i18n()}";
+                    lines.Add(string.IsNullOrEmpty(step.Detail) ? line0 : $"{line0} ({step.Detail})");
                     continue;
                 }
                 string line = $"! {step.Label} — {("reason." + step.Reason).i18n()}";

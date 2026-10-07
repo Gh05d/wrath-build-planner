@@ -39,7 +39,11 @@ The Builds window links to the page ("Create a build with ChatGPT or Claude…")
 | not found | No option with that name on the page. Similar names are listed. |
 | ambiguous | The name fits more than one selection. Add `"in"`. |
 | not selectable | The option exists but the game does not allow it now (prerequisites are shown). |
-| this level has no such selection | The page named by `"in"` does not exist on this level. |
+| this level has no such selection | The page named by `"in"` does not exist on this level, and no other open page offers the name either. |
+
+When the page named by `"in"` is not part of the level but exactly one open page offers the name (an AI calling the
+human bonus feat page "Bonus Feat"; in the game it is a second "Feat"), the pick goes there after all picks with a
+matching page are set, and the result says so: `applied (on the page Feat: …)`.
 | no free spell slot | More spells listed than the level grants. |
 | left to you | The mod does not decide this for you, e.g. a mythic path the game does not offer yet, or skill points without a skill list. |
 | internal error | Something went wrong inside the mod for this entry; the rest was still applied. The mod's log has the details. |

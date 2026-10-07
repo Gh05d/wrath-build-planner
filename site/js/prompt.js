@@ -83,6 +83,7 @@ NAMES
 - "in" is the page title in the level-up window. Page titles: ${titles.join(', ')}.
 - If you know the feat but not its page, write just the name: "picks": ["Deadly Aim"]. The mod finds the page when only one open page offers it.
 - Do not list class features the game grants automatically, only what the player chooses.
+- The human racial bonus feat is a second "Feat" page: write { "in": "Feat", … }, not "Bonus Feat".
 - If the guide gives final ability scores, subtract the racial bonus.
 - Attributes: ${vocab.attributes.join(', ')}.
 - Alignments: ${alignments.join(', ')}.

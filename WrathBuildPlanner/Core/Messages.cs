@@ -67,6 +67,7 @@ namespace WrathBuildPlanner.Core {
             { "step.path_open", "Mythic path" },
             { "step.path_locked", "the game does not offer this path now" },
             { "step.no_further", "'{0}' offers no further choice" },
+            { "step.on_page", "on the page {0}: the build's page is not part of this level" },
             { "step.failed", "{0}" },
         };
 

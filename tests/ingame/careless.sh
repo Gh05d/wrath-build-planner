@@ -54,6 +54,20 @@ count=$(bridge 'get WrathBuildPlanner.Main.Library.Entries.Count' | tail -1 | tr
 errs=$(bridge 'ui all' | grep -c 'error(s)')
 [ "$errs" -ge 4 ] && echo "PASS broken files show their errors ($errs)" || { echo "FAIL only $errs entries show errors"; FAILED=1; }
 
+echo "--- the long library scrolls with the wheel over a row's label, and shows a scrollbar"
+state=$(bridge 'invoke WrathBuildPlanner.Engine.TestHooks.LibraryScroll' | sed -n 's/^returned //p' | tr -d '\r')
+echo "$state"
+expect "$state" 'overflow=True bar=True' 'more rows than fit: the scrollbar shows'
+expect "$state" 'pos=1.00' 'the list starts at the top'
+sx=$(sed -n 's/.* x=\([0-9]*\).*/\1/p' <<<"$state"); sy=$(sed -n 's/.* y=\([0-9]*\).*/\1/p' <<<"$state")
+# Real (XTEST) events: "--window" sends synthetic ones that the game ignores. The game window sits at 0,0.
+ssh -o ConnectTimeout=6 deck-direct "export DISPLAY=:1; xdotool mousemove $sx $sy; sleep 0.3
+  for i in 1 2 3 4 5; do xdotool click 5; sleep 0.15; done"
+after=$(bridge 'wait 1' 'invoke WrathBuildPlanner.Engine.TestHooks.LibraryScroll' | sed -n 's/^returned //p' | tr -d '\r')
+echo "$after"
+expect_not "$after" 'pos=1.00' 'the wheel over a label scrolls the list'
+bridge 'shot careless-scrolled' >/dev/null
+
 echo "--- pasting the wrong things"
 expect "$(import '   ')" 'EMPTY' 'empty clipboard (whitespace: DevBridge cannot pass an empty argument)'
 expect "$(import 'lol idk just make me op')" 'FAILED' 'junk text refused'

@@ -97,5 +97,6 @@
   "msg.step.path_open": "Voie mythique",
   "msg.step.path_locked": "le jeu ne propose pas cette voie pour l'instant",
   "msg.step.no_further": "'{0}' n'offre pas d'autre choix",
+  "msg.step.on_page": "sur la page {0} : la page du build n'existe pas à ce niveau",
   "msg.step.failed": "{0}"
 }

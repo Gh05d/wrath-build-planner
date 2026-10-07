@@ -1,0 +1,13 @@
+{
+  "format": 1,
+  "name": "Test Reroute",
+  "for": "main",
+  "skills": ["Athletics", "Perception", "Persuasion", "Mobility"],
+  "levels": [
+    { "level": 1, "class": "Fighter" },
+    { "level": 2, "class": "Fighter",
+      "picks": [ { "in": "Bonus Feat", "pick": "Dodge" }, { "in": "Bonus Combat Feat", "pick": "Improved Initiative" } ] },
+    { "level": 3, "class": "Fighter",
+      "picks": [ { "in": "Bonus Feat", "pick": "Dodge" }, { "in": "Bonus Feat", "pick": "No Such Feat Anywhere" } ] }
+  ]
+}

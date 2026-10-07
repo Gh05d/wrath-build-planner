@@ -29,6 +29,7 @@ namespace WrathBuildPlanner.Engine {
                 sb.Append($" HISTORY expected[{report.History.Expected}] actual[{report.History.Actual}]");
             foreach (var step in report.Steps) {
                 sb.Append($" || {step.Status} {step.Label}");
+                if (step.Status == StepStatus.Applied && step.Detail != null) sb.Append($" ({step.Detail})");
                 if (step.Status == StepStatus.Open) sb.Append($" ({step.Reason}{(step.Detail != null ? ": " + step.Detail : "")}{(step.Suggestions.Count > 0 ? "; similar: " + string.Join(", ", step.Suggestions) : "")})");
             }
             return sb.ToString();
@@ -130,6 +131,8 @@ namespace WrathBuildPlanner.Engine {
             UI.BuildsWindow.Toggle();
             return UI.BuildsWindow.IsOpen ? "open" : "closed";
         }
+
+        static string LibraryScroll() => UI.BuildsWindow.LibraryScrollState();
 
         /// <summary>Import text given as base64 (DevBridge arguments cannot contain spaces).</summary>
         static string ImportText(string base64) {

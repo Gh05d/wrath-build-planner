@@ -97,5 +97,6 @@
   "msg.step.path_open": "Mythic-Pfad",
   "msg.step.path_locked": "das Spiel bietet diesen Pfad jetzt nicht an",
   "msg.step.no_further": "'{0}' bietet keine weitere Auswahl",
+  "msg.step.on_page": "auf der Seite {0}: die Seite aus dem Build gibt es auf dieser Stufe nicht",
   "msg.step.failed": "{0}"
 }

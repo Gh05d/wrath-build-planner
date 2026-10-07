@@ -3,12 +3,16 @@
 cd "$(dirname "$0")"
 BRIDGE="../../../dev-bridge"
 status=0
-for script in guards.sh multiclass.sh mythic.sh extras.sh chargen.sh example.sh mercenary.sh spontaneous.sh careless.sh; do
+for script in guards.sh multiclass.sh mythic.sh extras.sh chargen.sh example.sh mercenary.sh spontaneous.sh reroute.sh careless.sh; do
   echo "=================== $script"
   bash "$BRIDGE/bridge.sh" quit >/dev/null 2>&1
   bash "$BRIDGE/launch.sh" || { echo "FAIL launch before $script"; status=1; continue; }
   bash "./$script" || status=1
 done
 bash "$BRIDGE/bridge.sh" quit >/dev/null 2>&1
+# The Deck is also where the game is played: leave no test builds in the player's library.
+source ./lib.sh
+names=$(cd ../builds && ls *.json | tr '\n' ' ')
+ssh -o ConnectTimeout=6 deck-direct "cd '$MOD_DIR_DECK/Builds' && rm -f $names paste-test-*.json"
 echo "=================== overall: $([ $status -eq 0 ] && echo PASS || echo FAIL)"
 exit $status

@@ -27,7 +27,11 @@ namespace WrathBuildPlanner.Engine.Steps {
             public StepResult Failure;
             public bool Done;
             public bool WasAlreadySet;
+            public string RoutedTo;   // the page that took the pick when the named one is not part of this level
         }
+
+        // Second phase of a run: a pick whose page is not part of this level looks for its name on the open pages.
+        bool fallback;
 
         public static List<PickEntry> Picks(ApplyContext context) =>
             (context.MythicRow != null ? context.MythicRow.Picks : context.Row?.Picks) ?? new List<PickEntry>();
@@ -45,9 +49,13 @@ namespace WrathBuildPlanner.Engine.Steps {
             // Picks to a fixed point, then spells to a fixed point, and again while spells still change something.
             // Order matters: the game can drop spell picks when a feature is selected after them, and the spell
             // pass re-selects whatever is missing.
+            // A page named in the build that this level does not have (an LLM calls the human bonus feat page
+            // "Bonus Feat"; in the game it is a second "Feat") is tried as a bare name, but only after every pick
+            // with a matching page has had its slot, so a rerouted pick never takes another pick's place.
+            fallback = false;
             for (int pass = 0; pass < MaxPasses; pass++) {
                 bool picked = true;
-                for (int round = 0; picked && round < MaxPasses; round++) {
+                for (int round = 0; round < MaxPasses; round++) {
                     picked = false;
                     foreach (var pick in pending.Where(p => !p.Done)) {
                         var before = SpellStep.PickedNow(context);
@@ -57,6 +65,9 @@ namespace WrathBuildPlanner.Engine.Steps {
                         if (lost.Count > 0)
                             Logging.Log.Engine.Warn($"selecting '{pick.Chain[pick.Position - 1]}' made the game drop spell picks: {string.Join(", ", lost)} (re-selected by the spell pass)");
                     }
+                    if (picked) continue;
+                    if (fallback || !pending.Any(p => !p.Done && p.Position == 0 && p.Entry.In != null)) break;
+                    fallback = true;
                 }
                 bool spells = false;
                 try {
@@ -70,7 +81,8 @@ namespace WrathBuildPlanner.Engine.Steps {
 
             foreach (var pick in pending) {
                 if (pick.WasAlreadySet) context.Report.Steps.Add(StepResult.Already(pick.Entry.Label));
-                else if (pick.Done) context.Report.Steps.Add(StepResult.Applied(pick.Entry.Label));
+                else if (pick.Done) context.Report.Steps.Add(StepResult.Applied(pick.Entry.Label,
+                    pick.RoutedTo != null ? Messages.Get("step.on_page", pick.RoutedTo) : null));
                 else context.Report.Steps.Add(pick.Failure ?? StepResult.Open(pick.Entry.Label, OpenReason.SelectionMissing));
             }
         }
@@ -100,6 +112,9 @@ namespace WrathBuildPlanner.Engine.Steps {
                     last = splitLast;
                 }
             }
+            // A pick an earlier Apply rerouted: its named page is not part of this level, so look on every page.
+            if (matched == 0 && pick.Entry.In != null && !AnySelected(context, pick.Entry.In))
+                matched = Selected(context, null, pick.Chain, out last);
             if (matched == 0) return;
             pick.Position = matched;
             pick.Parent = last;
@@ -145,6 +160,7 @@ namespace WrathBuildPlanner.Engine.Steps {
             string label = pick.Entry.Label;
 
             List<FeatureSelectionState> targets;
+            bool rerouting = false;
             if (pick.Position > 0) {
                 // The child selection of a picked item is the open selection whose Selection is that feature.
                 targets = open.Where(s => ReferenceEquals(s.Selection, pick.Parent.Feature)).ToList();
@@ -156,14 +172,18 @@ namespace WrathBuildPlanner.Engine.Steps {
                 var outcome = NameMatcher.Match(pick.Entry.In, open.Select(GameNames.OfSelection).ToList());
                 if (outcome.Kind == MatchKind.None) {
                     pick.Failure = StepResult.Open(label, OpenReason.SelectionMissing, null, outcome.Suggestions);
-                    return false;
+                    // Not part of this level at all (not merely filled already): in the fallback phase the name is
+                    // looked up on the open pages as for a bare name. If nothing fits, "no such selection" stays.
+                    if (!fallback || AnySelected(context, pick.Entry.In)) return false;
+                    rerouting = true;
                 }
                 // Several open slots of the same selection (two "Feat" slots) are tried in order.
                 // Different selections sharing the name are an ambiguity, not something to guess.
-                targets = outcome.Kind == MatchKind.Unique
+                targets = rerouting ? open
+                    : outcome.Kind == MatchKind.Unique
                     ? new List<FeatureSelectionState> { (FeatureSelectionState)outcome.Match.Tag }
                     : outcome.Tied.Select(t => (FeatureSelectionState)t.Tag).ToList();
-                if (targets.Select(t => t.Selection).Distinct().Count() > 1) {
+                if (!rerouting && targets.Select(t => t.Selection).Distinct().Count() > 1) {
                     pick.Failure = StepResult.Open(label, OpenReason.Ambiguous,
                         string.Join(", ", targets.Select(t => (t.Selection as Kingmaker.Blueprints.SimpleBlueprint)?.name ?? "?").Distinct()));
                     return false;
@@ -182,6 +202,7 @@ namespace WrathBuildPlanner.Engine.Steps {
                     hits.Add(new KeyValuePair<FeatureSelectionState, IFeatureSelectionItem>(selection, (IFeatureSelectionItem)outcome.Match.Tag));
             }
 
+            if (hits.Count == 0 && rerouting) return false;   // keeps "no such selection" with its hint
             if (hits.Count == 0) {
                 // "Weapon Focus (Greatsword)" written as one name: retry as a chain.
                 if (pick.Chain.Count == 1 && NameMatcher.TrySplitParenChain(wanted, out string head, out string tail)) {
@@ -199,9 +220,10 @@ namespace WrathBuildPlanner.Engine.Steps {
             }
 
             // A bare name must not be guessed across different selections.
-            if (pick.Position == 0 && pick.Entry.In == null) {
+            if (pick.Position == 0 && (pick.Entry.In == null || rerouting)) {
                 var blueprints = hits.Select(h => h.Key.Selection).Distinct().ToList();
                 if (blueprints.Count > 1) {
+                    if (rerouting) return false;   // several pages offer it: keep "no such selection" and its hint
                     pick.Failure = StepResult.Open(label, OpenReason.Ambiguous,
                         string.Join(", ", hits.Select(h => GameNames.OfSelection(h.Key).Display).Distinct()));
                     return false;
@@ -220,12 +242,17 @@ namespace WrathBuildPlanner.Engine.Steps {
                 }
                 pick.Parent = hit.Value;
                 pick.Failure = null;
+                if (rerouting) pick.RoutedTo = GameNames.OfSelection(hit.Key).Display;
                 pick.Position++;
                 pick.Done = pick.Position >= pick.Chain.Count;
                 return true;
             }
             return false;
         }
+
+        // Whether a page of that name is part of this level and already filled.
+        static bool AnySelected(ApplyContext context, string scope) =>
+            NameMatcher.Match(scope, context.State.Selections.Where(s => s.Selected).Select(GameNames.OfSelection).ToList()).Kind != MatchKind.None;
 
         // An ambiguity is more useful to report than "not found"; a unique hit beats both.
         static MatchOutcome Prefer(MatchOutcome current, MatchOutcome next) {

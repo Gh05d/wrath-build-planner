@@ -31,6 +31,25 @@ namespace WrathBuildPlanner.UI {
 
         public static bool IsOpen => overlay != null;
 
+        /// <summary>
+        /// For in-game tests: the library's scroll position (1 = top) and a point over a row's label, where no
+        /// button is, in window pixels from the top left (xdotool). "closed" when the window is not open.
+        /// </summary>
+        internal static string LibraryScrollState() {
+            if (!IsOpen || libraryList == null) return "closed";
+            var scroll = libraryList.GetComponentInParent<ScrollRect>();
+            var corners = new Vector3[4];
+            ((RectTransform)scroll.transform).GetWorldCorners(corners);
+            var canvas = scroll.GetComponentInParent<Canvas>().rootCanvas;
+            var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            var bottomLeft = RectTransformUtility.WorldToScreenPoint(camera, corners[0]);
+            var topRight = RectTransformUtility.WorldToScreenPoint(camera, corners[2]);
+            int x = (int)(bottomLeft.x + (topRight.x - bottomLeft.x) * 0.3f);
+            int y = Screen.height - (int)((bottomLeft.y + topRight.y) / 2f);
+            bool overflow = scroll.content.rect.height > ((RectTransform)scroll.viewport).rect.height + 1f;
+            return $"pos={scroll.verticalNormalizedPosition:0.00} x={x} y={y} overflow={overflow} bar={scroll.verticalScrollbar.gameObject.activeInHierarchy}";
+        }
+
         // The game hands Escape to the newest subscriber only (EscHotkeyManager.OnEscPressed, IL 2026-10-06). Without a
         // subscription the level-up window under ours got the key too and asked to discard the player's choices.
         static IDisposable escSubscription;
@@ -161,12 +180,20 @@ namespace WrathBuildPlanner.UI {
         }
 
         // A scrollable vertical list inside the given box; returns the content object rows are added to.
+        // The box catches pointer events over its whole area (labels and gaps between rows are not raycast
+        // targets, so wheel and drag only worked over a button), and a scrollbar shows when the rows overflow.
         static GameObject Column(GameObject box) {
+            var catcher = box.AddComponent<Image>();
+            catcher.color = new Color(0f, 0f, 0f, 0f);
+            catcher.raycastTarget = true;
             var scroll = box.AddComponent<ScrollRect>();
             scroll.horizontal = false;
             scroll.scrollSensitivity = 30f;
-            box.AddComponent<RectMask2D>();
-            var (content, contentRect) = UIHelpers.Create("Content", box.transform);
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            var (viewport, viewportRect) = UIHelpers.Create("Viewport", box.transform);
+            viewportRect.FillParent();
+            viewport.AddComponent<RectMask2D>();
+            var (content, contentRect) = UIHelpers.Create("Content", viewport.transform);
             contentRect.anchorMin = new Vector2(0f, 1f);
             contentRect.anchorMax = new Vector2(1f, 1f);
             contentRect.pivot = new Vector2(0f, 1f);
@@ -179,10 +206,36 @@ namespace WrathBuildPlanner.UI {
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            scroll.viewport = box.Rect();
+            scroll.viewport = viewportRect;
             scroll.content = contentRect;
+
+            var (bar, barRect) = UIHelpers.Create("Scrollbar", box.transform);
+            barRect.anchorMin = new Vector2(1f, 0f);
+            barRect.anchorMax = new Vector2(1f, 1f);
+            barRect.pivot = new Vector2(1f, 0.5f);
+            barRect.sizeDelta = new Vector2(ScrollbarWidth, 0f);
+            barRect.anchoredPosition = Vector2.zero;
+            UIHelpers.AddBackground(bar, Theme.InkFrame);
+            var (area, areaRect) = UIHelpers.Create("SlidingArea", bar.transform);
+            areaRect.FillParent();
+            areaRect.offsetMin = new Vector2(2f, 2f);
+            areaRect.offsetMax = new Vector2(-2f, -2f);
+            var (handle, handleRect) = UIHelpers.Create("Handle", area.transform);
+            handleRect.FillParent();
+            var handleImage = handle.AddComponent<Image>();
+            handleImage.color = Theme.InkMuted;
+            var scrollbar = bar.AddComponent<Scrollbar>();
+            scrollbar.direction = Scrollbar.Direction.BottomToTop;
+            scrollbar.handleRect = handleRect;
+            scrollbar.targetGraphic = handleImage;
+            scroll.verticalScrollbar = scrollbar;
+            // Hidden while everything fits; the rows then also take the bar's width.
+            scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+            scroll.verticalScrollbarSpacing = 6f;
             return content;
         }
+
+        const float ScrollbarWidth = 14f;
 
         static void Clear(GameObject list) {
             for (int i = list.transform.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(list.transform.GetChild(i).gameObject);

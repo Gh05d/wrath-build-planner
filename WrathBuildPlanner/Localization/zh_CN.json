@@ -97,5 +97,6 @@
   "msg.step.path_open": "神话道途",
   "msg.step.path_locked": "游戏当前不提供该道途",
   "msg.step.no_further": "“{0}”没有进一步的选择",
+  "msg.step.on_page": "在“{0}”页面：构建中的页面在此等级不存在",
   "msg.step.failed": "{0}"
 }
