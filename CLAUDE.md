@@ -70,5 +70,6 @@ Spec: `pathfinder-mods/docs/superpowers/specs/2026-10-04-wrath-build-planner-aut
     bash tests/ingame/all.sh          # guards, multiclass, mythic, extras, chargen, example, mercenary, spontaneous, reroute, careless — restarts the game per script
 
 Scripts assert on the English result text: game language English, mod language `auto`.
+`all.sh` checks the Deck before each script and caps each at 20 minutes: a lost USB link once stalled a run silently for two hours. Standby cannot be blocked over SSH (`systemd-inhibit` needs admin auth there); Steam suspends after 1 h without real input on AC (`IdleSuspendACSeconds`), 20 min on battery — xdotool input does not count.
 Test builds must match the game's own counts: a spell the class does not grant that level ends in `Open Spell … (NoFreeSlot)`, a missing `abilityPoint` on levels 4/8/… leaves Next blocked — `finish` then reports "Complete never appeared". Look at the `<name>-stuck.png` shot before suspecting the mod.
 `Engine/TestHooks.cs` holds the static entry points the scripts call through DevBridge.
