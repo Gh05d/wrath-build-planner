@@ -31,4 +31,4 @@ The page https://gh05d.github.io/wrath-build-planner/ does the same for people; 
 
 - Not part of a build: portrait, appearance, voice, name, equipment.
 - The mod matches names against what the game offers on the page at hand, so content from other mods works in the game even when check.mjs reports it as unknown (names.json lists the base game and DLCs).
-- The mod is installed with Unity Mod Manager: https://www.nexusmods.com/site/mods/21. Releases: https://github.com/Gh05d/wrath-build-planner/releases
+- The mod is installed with Unity Mod Manager: https://www.nexusmods.com/site/mods/21. Download: https://www.nexusmods.com/pathfinderwrathoftherighteous/mods/1210 (also on https://github.com/Gh05d/wrath-build-planner/releases)

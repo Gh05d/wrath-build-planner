@@ -1,11 +1,13 @@
 # Wrath Build Planner
 
+Download: **[Nexus Mods](https://www.nexusmods.com/pathfinderwrathoftherighteous/mods/1210)** (or the [GitHub releases](https://github.com/Gh05d/wrath-build-planner/releases)). Requires Unity Mod Manager.
+
 Follow a character build from a guide without comparing every level by hand. Import the build as a
 small text file, assign it to a character, and press **Apply build** in the level-up or character
 creation window. The mod makes the picks for that level; you look them over and press Complete.
 
 **Share your builds:** have a build that works well, or know a popular one from a guide? Send it in and it
-can ship with the mod for everyone — post it on the Nexus page, send a private message there, or
+can ship with the mod for everyone — post it on the [Nexus page](https://www.nexusmods.com/pathfinderwrathoftherighteous/mods/1210), send a private message there, or
 [open an issue](https://github.com/Gh05d/wrath-build-planner/issues). Say how you want to be credited.
 
 ## How it works
