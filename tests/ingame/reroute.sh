@@ -22,6 +22,8 @@ expect "$out" 'Applied Bonus Feat: Dodge (on the page Feat' 'rerouted to the Fea
 expect "$out" 'Open Bonus Feat: No Such Feat Anywhere (SelectionMissing' 'a name no page offers keeps "no such selection"'
 again=$(apply reroute.json)
 expect "$again" 'AlreadySet Bonus Feat: Dodge' 'a second Apply sees the rerouted pick as set'
+bridge 'invoke WrathBuildPlanner.Engine.TestHooks.Assign reroute.json' >/dev/null
 bar=$(bridge 'invoke WrathBuildPlanner.Engine.TestHooks.PressApply' | sed -n 's/^returned //p')
-expect "$bar" 'Dodge' 'the bar result lists the pick'
+expect "$bar" 'Bonus Feat: Dodge' 'the bar result lists the pick'
+bridge 'invoke WrathBuildPlanner.Engine.TestHooks.Assign -' >/dev/null
 exit $FAILED
