@@ -183,8 +183,13 @@ namespace WrathBuildPlanner.UI {
         // The box catches pointer events over its whole area (labels and gaps between rows are not raycast
         // targets, so wheel and drag only worked over a button), and a scrollbar shows when the rows overflow.
         static GameObject Column(GameObject box) {
-            var catcher = box.AddComponent<Image>();
-            catcher.color = new Color(0f, 0f, 0f, 0f);
+            // Reuse a box's own background (the picker's paper): Unity allows one Graphic per object, so a
+            // second AddComponent<Image> returns null and the picker came up empty (v1.0.1, Nexus report).
+            var catcher = box.GetComponent<Image>();
+            if (catcher == null) {
+                catcher = box.AddComponent<Image>();
+                catcher.color = new Color(0f, 0f, 0f, 0f);
+            }
             catcher.raycastTarget = true;
             var scroll = box.AddComponent<ScrollRect>();
             scroll.horizontal = false;
