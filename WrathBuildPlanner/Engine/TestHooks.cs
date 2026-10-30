@@ -56,6 +56,47 @@ namespace WrathBuildPlanner.Engine {
             return sb.ToString();
         }
 
+        static Kingmaker.EntitySystem.Entities.UnitEntityData Unit(string who) {
+            var player = Game.Instance.Player;
+            if (who == "main") return player.MainCharacter.Value;
+            return player.AllCharacters.Concat(player.RemoteCompanions).FirstOrDefault(u => u.UniqueId == who || u.CharacterName == who);
+        }
+
+        /// <summary>The engine facts the character export relies on (verification probe, plan Task 1).</summary>
+        static string ExportProbe(string who) {
+            var unit = Unit(who);
+            if (unit == null) return "NO UNIT " + who;
+            var p = unit.Progression;
+            var sb = new StringBuilder();
+            sb.Append($"{unit.CharacterName} L{p.CharacterLevel} M{p.MythicLevel} race={p.Race?.name}");
+            sb.Append(" || order: " + string.Join(" ", p.m_ClassesOrder.Select((c, i) => $"{i + 1}:{c.name}{(c.IsMythic ? "*" : "")}")));
+            sb.Append(" || classes: " + string.Join(" ", p.Classes.Select(c => $"{c.CharacterClass.name}={c.Level}[{string.Join("+", c.Archetypes.Select(a => a.name))}]")));
+            sb.Append(" || selections:");
+            foreach (var kv in p.Selections) {
+                var src = kv.Value.Source.Blueprint;
+                sb.Append($" {kv.Key.name}<{src?.GetType().Name}:{src?.name}>{{{string.Join(",", kv.Value.SelectionsByLevel.Select(l => l.Key + "=" + string.Join("/", l.Value.Select(f => f.name))))}}}");
+            }
+            sb.Append(" || params:");
+            foreach (var f in p.Features.Enumerable.Where(f => f.Param != null))
+                sb.Append($" {f.Blueprint.name}({f.Param.WeaponCategory}{f.Param.SpellSchool}{f.Param.StatType}{f.Param.Blueprint?.name})<{f.m_Source?.name}@{f.SourceLevel}>");
+            var granted = unit.Facts.List.SelectMany(fact => fact.Blueprint.ComponentsArray.OfType<Kingmaker.UnitLogic.FactLogic.AddKnownSpell>()
+                .Select(c => $"{c.Spell?.name}@{c.SpellLevel}<{fact.Blueprint.name}>")).ToList();
+            sb.Append(" || granted: " + string.Join(" ", granted));
+            foreach (var book in unit.Descriptor.Spellbooks) {
+                var bp = book.Blueprint;
+                sb.Append($" || book {bp.name} spont={bp.Spontaneous} perLevel={bp.SpellsPerLevel} known={(bp.SpellsKnown != null ? bp.SpellsKnown.name : "null")} casterLevel={book.CasterLevel}:");
+                for (int level = 0; level <= 9; level++) {
+                    var known = book.GetKnownSpells(level);
+                    if (known.Count > 0) sb.Append($" L{level}[{string.Join(",", known.Select(k => k.Blueprint.name + (k.CopiedFromScroll ? "(scroll)" : "")))}]");
+                }
+            }
+            var player = Game.Instance.Player;
+            sb.Append(" || party: " + string.Join(",", player.Party.Select(u => u.CharacterName)));
+            sb.Append(" | all: " + string.Join(",", player.AllCharacters.Select(u => u.CharacterName + (u.IsPet ? "(pet)" : ""))));
+            sb.Append(" | remote: " + string.Join(",", player.RemoteCompanions.Select(u => u.CharacterName + (u.IsPet ? "(pet)" : ""))));
+            return sb.ToString();
+        }
+
         /// <summary>Test helper: fill every still-open feature selection with its first selectable item.</summary>
         static string FillRest() {
             var controller = WindowTracker.Controller;
