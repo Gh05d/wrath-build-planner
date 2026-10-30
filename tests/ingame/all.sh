@@ -8,7 +8,7 @@ BRIDGE="../../../dev-bridge"
 # admin auth), so standby is not blocked: a full run takes ~30 minutes, under Steam's one hour on AC.
 deck_ok() { timeout 15 ssh -o ConnectTimeout=6 -o ControlPath=none deck-direct true 2>/dev/null; }
 status=0
-for script in guards.sh multiclass.sh mythic.sh extras.sh chargen.sh example.sh mercenary.sh spontaneous.sh reroute.sh careless.sh; do
+for script in guards.sh multiclass.sh mythic.sh extras.sh chargen.sh example.sh mercenary.sh export.sh spontaneous.sh reroute.sh careless.sh; do
   echo "=================== $script"
   deck_ok || { echo "FAIL Deck unreachable before $script — check the USB cable or wake the Deck"; status=1; break; }
   bash "$BRIDGE/bridge.sh" quit >/dev/null 2>&1

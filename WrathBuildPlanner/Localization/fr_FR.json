@@ -98,5 +98,19 @@
   "msg.step.path_locked": "le jeu ne propose pas cette voie pour l'instant",
   "msg.step.no_further": "'{0}' n'offre pas d'autre choix",
   "msg.step.on_page": "sur la page {0} : la page du build n'existe pas à ce niveau",
-  "msg.step.failed": "{0}"
+  "msg.step.failed": "{0}",
+  "export.title": "Exporter un personnage comme build",
+  "export.party": "Groupe",
+  "export.reserve": "Réserve",
+  "export.none": "Aucune partie chargée.",
+  "export.button": "Exporter",
+  "export.level": "niveau {0}",
+  "export.saved": "Enregistré sous {0} — il est maintenant dans la fenêtre Builds.",
+  "export.failed": "Échec de l’export : {0}",
+  "export.skipped": "{0} choix n’ont pas pu être lus et ont été omis (voir le journal du mod).",
+  "export.no_history": "Le jeu n’a enregistré aucun niveau de {0} (personnage monté par préréglage) : rien à exporter.",
+  "export.gap.history": "Le jeu n’a pas enregistré tous les niveaux de ce personnage ; seuls ceux enregistrés sont dans le fichier.",
+  "export.gap.scores": "Les caractéristiques sont laissées à votre choix : fixez-les avant d’appliquer, les dons avec un prérequis de caractéristique en ont besoin.",
+  "export.gap.ability_points": "Les augmentations de caractéristique (niveaux 4, 8, …) sont laissées à votre choix.",
+  "export.gap.spells": "Certains sorts n’ont pu être placés sur aucun niveau et ont été omis."
 }

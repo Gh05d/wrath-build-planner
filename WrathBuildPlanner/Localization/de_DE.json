@@ -98,5 +98,19 @@
   "msg.step.path_locked": "das Spiel bietet diesen Pfad jetzt nicht an",
   "msg.step.no_further": "'{0}' bietet keine weitere Auswahl",
   "msg.step.on_page": "auf der Seite {0}: die Seite aus dem Build gibt es auf dieser Stufe nicht",
-  "msg.step.failed": "{0}"
+  "msg.step.failed": "{0}",
+  "export.title": "Charakter als Build exportieren",
+  "export.party": "Gruppe",
+  "export.reserve": "Reserve",
+  "export.none": "Kein Spielstand geladen.",
+  "export.button": "Exportieren",
+  "export.level": "Stufe {0}",
+  "export.saved": "Gespeichert als {0} — steht jetzt im Builds-Fenster.",
+  "export.failed": "Export fehlgeschlagen: {0}",
+  "export.skipped": "{0} Auswahl(en) ließen sich nicht lesen und fehlen (siehe Mod-Log).",
+  "export.no_history": "Das Spiel hat keine Stufe von {0} aufgezeichnet (vorgefertigt gelevelter Charakter), es gibt nichts zu exportieren.",
+  "export.gap.history": "Das Spiel hat nicht jede Stufe dieses Charakters aufgezeichnet; nur die aufgezeichneten stehen in der Datei.",
+  "export.gap.scores": "Die Attributswerte wählst du selbst: setze sie vor „Build anwenden“, Feats mit Attributsvoraussetzung brauchen sie.",
+  "export.gap.ability_points": "Attributssteigerungen (Stufe 4, 8, …) wählst du selbst.",
+  "export.gap.spells": "Einige Zauber ließen sich keiner Stufe zuordnen und fehlen."
 }
