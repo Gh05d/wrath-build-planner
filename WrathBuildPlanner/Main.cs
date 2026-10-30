@@ -59,6 +59,8 @@ namespace WrathBuildPlanner {
                 settings.Verbose = verbose;
                 Persistence.ModSettings.Save();
             }
+
+            UI.ExportSection.Draw();
         }
 
         static bool OnUnload(UnityModManager.ModEntry modEntry) {

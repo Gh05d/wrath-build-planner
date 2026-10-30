@@ -98,5 +98,19 @@
   "msg.step.path_locked": "游戏当前不提供该道途",
   "msg.step.no_further": "“{0}”没有进一步的选择",
   "msg.step.on_page": "在“{0}”页面：构建中的页面在此等级不存在",
-  "msg.step.failed": "{0}"
+  "msg.step.failed": "{0}",
+  "export.title": "将角色导出为构筑",
+  "export.party": "队伍",
+  "export.reserve": "预备",
+  "export.none": "未载入游戏。",
+  "export.button": "导出",
+  "export.level": "{0} 级",
+  "export.saved": "已保存为 {0}，现在可在构筑窗口中找到。",
+  "export.failed": "导出失败：{0}",
+  "export.skipped": "{0} 个选择无法读取，已省略（见模组日志）。",
+  "export.no_history": "游戏没有记录 {0} 的任何等级（预设升级的角色），无可导出。",
+  "export.gap.history": "游戏没有记录该角色的全部等级；文件中只有已记录的等级。",
+  "export.gap.scores": "属性值由你决定。",
+  "export.gap.ability_points": "属性提升（4、8……级）由你决定。",
+  "export.gap.spells": "部分法术无法对应到等级，已省略。"
 }

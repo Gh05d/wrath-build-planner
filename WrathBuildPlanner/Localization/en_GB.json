@@ -41,5 +41,19 @@
   "settings.hotkey": "Hotkey for the Builds window (Ctrl + key)",
   "settings.language": "Language",
   "settings.verbose": "Verbose log",
-  "bar.no_window": "No level-up window is open."
+  "bar.no_window": "No level-up window is open.",
+  "export.title": "Export a character as a build",
+  "export.party": "Party",
+  "export.reserve": "Reserve",
+  "export.none": "No party loaded.",
+  "export.button": "Export",
+  "export.level": "level {0}",
+  "export.saved": "Saved as {0} — it is in the Builds window now.",
+  "export.failed": "Export failed: {0}",
+  "export.skipped": "{0} pick(s) could not be read and were left out (see the mod log).",
+  "export.no_history": "The game recorded none of {0}'s levels (a preset-levelled character), so there is nothing to export.",
+  "export.gap.history": "The game did not record every level of this character; only the recorded ones are in the file.",
+  "export.gap.scores": "Ability scores are left to you.",
+  "export.gap.ability_points": "Ability increases (levels 4, 8, …) are left to you.",
+  "export.gap.spells": "Some spells could not be placed on a level and were left out."
 }
