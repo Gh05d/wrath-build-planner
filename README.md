@@ -21,6 +21,18 @@ can ship with the mod for everyone — post it on the [Nexus page](https://www.n
 The mod never finishes a level for you, and it only fills what is still open — picks you made
 yourself stay. Portrait, appearance, voice and name are always yours.
 
+## Saving a character as a build
+
+Built a character in the game you want to keep, a mercenary for example? Open the mod settings (Ctrl+F10,
+Wrath Build Planner) and press **Export** next to the character, in the active party or in reserve. The build
+is saved to `Builds/` and shows up in the Builds window at once, ready for a new character.
+
+The file holds what the game records: race, class and archetype per level, every feat and selection, mythic
+path and picks, a skill priority list from the character's ranks, and the spells a learning caster picked.
+The game does not record starting ability scores and ability increases, so those are left to you. Set the
+scores before pressing **Apply build**: feats with an ability requirement need them. Hired mercenaries that
+came with their levels have no level history in the game, so only the levels the game recorded are exported.
+
 ## Creating builds
 
 Use the build page: **https://gh05d.github.io/wrath-build-planner/** — copy a prompt into ChatGPT, Claude or

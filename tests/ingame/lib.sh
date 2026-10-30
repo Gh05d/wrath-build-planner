@@ -52,6 +52,12 @@ load_fixture() {
   local out header load
   out=$(bridge 'clicktext Load game' 'wait 3' 'ui')
   header=$(grep -n 'BridgeTest' <<<"$out" | head -1 | cut -d: -f1)
+  if [ -z "$header" ]; then
+    # Another character's group is expanded and pushes BridgeTest out of view: collapse it.
+    bridge "click $(grep -m1 'ExpandButton' <<<"$out" | cut -d'|' -f1 | tr ',' ' ')" 'wait 1' >/dev/null
+    out=$(bridge 'ui')
+    header=$(grep -n 'BridgeTest' <<<"$out" | head -1 | cut -d: -f1)
+  fi
   [ -n "$header" ] || { echo "FAIL load_fixture: no BridgeTest group"; FAILED=1; return 1; }
   load=$(tail -n +"$header" <<<"$out" | grep -m1 '| Load |' | cut -d'|' -f1 | tr ',' ' ')
   [ -n "$load" ] || { bridge 'clicktext BridgeTest' 'wait 1' >/dev/null; out=$(bridge 'ui'); load=$(tail -n +"$(grep -n 'BridgeTest' <<<"$out" | head -1 | cut -d: -f1)" <<<"$out" | grep -m1 '| Load |' | cut -d'|' -f1 | tr ',' ' '); }
