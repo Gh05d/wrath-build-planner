@@ -112,5 +112,6 @@
   "export.gap.history": "Das Spiel hat nicht jede Stufe dieses Charakters aufgezeichnet; nur die aufgezeichneten stehen in der Datei.",
   "export.gap.scores": "Die Attributswerte wählst du selbst: setze sie vor „Build anwenden“, Feats mit Attributsvoraussetzung brauchen sie.",
   "export.gap.ability_points": "Attributssteigerungen (Stufe 4, 8, …) wählst du selbst.",
-  "export.gap.spells": "Einige Zauber ließen sich keiner Stufe zuordnen und fehlen."
+  "export.gap.spells": "Einige Zauber ließen sich keiner Stufe zuordnen und fehlen.",
+  "export.gap.legend": "Legend-Stufen über 20 fehlen: das Build-Format endet bei Stufe 20."
 }

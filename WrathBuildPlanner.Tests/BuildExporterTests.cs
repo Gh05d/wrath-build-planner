@@ -127,6 +127,15 @@ namespace WrathBuildPlanner.Tests {
         }
 
         [Fact]
+        public void LegendLevelsAreTheirOwnGap() {
+            var legend = Record(levels: 20);
+            legend.CharacterLevel = 23;
+            legend.LegendLevelsLeftOut = true;
+            Assert.Equal(new[] { "export.gap.scores", "export.gap.ability_points", "export.gap.legend" },
+                BuildExporter.Gaps(legend, BuildExporter.ToBuild(legend)));
+        }
+
+        [Fact]
         public void ExportNameSlugsSafely() {
             var library = new BuildLibrary(dir, null);
             var result = library.ImportText(BuildExporter.ToJson(BuildExporter.ToBuild(Record("司祭", 1))));

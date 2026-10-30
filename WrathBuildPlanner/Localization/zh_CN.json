@@ -112,5 +112,6 @@
   "export.gap.history": "游戏没有记录该角色的全部等级；文件中只有已记录的等级。",
   "export.gap.scores": "属性值由你决定：请在应用构筑前设定，有属性要求的专长需要它们。",
   "export.gap.ability_points": "属性提升（4、8……级）由你决定。",
-  "export.gap.spells": "部分法术无法对应到等级，已省略。"
+  "export.gap.spells": "部分法术无法对应到等级，已省略。",
+  "export.gap.legend": "20 级以上的传奇等级已省略：构筑格式只到 20 级。"
 }

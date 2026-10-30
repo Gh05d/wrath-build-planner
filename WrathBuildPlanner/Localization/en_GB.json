@@ -55,5 +55,6 @@
   "export.gap.history": "The game did not record every level of this character; only the recorded ones are in the file.",
   "export.gap.scores": "Ability scores are left to you: set them before pressing Apply build, feats with an ability requirement need them.",
   "export.gap.ability_points": "Ability increases (levels 4, 8, …) are left to you.",
-  "export.gap.spells": "Some spells could not be placed on a level and were left out."
+  "export.gap.spells": "Some spells could not be placed on a level and were left out.",
+  "export.gap.legend": "Legend levels above 20 are left out: the build format ends at level 20."
 }

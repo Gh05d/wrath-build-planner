@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,9 @@ namespace WrathBuildPlanner.Core {
     /// stays out of the file, so the planner leaves those pages to the player.
     /// </summary>
     public static class BuildExporter {
+        /// <summary>Highest character level the build format holds (BuildValidator rejects more).</summary>
+        public const int MaxLevel = 20;
+
         public static BuildFile ToBuild(CharacterRecord record) {
             var build = new BuildFile {
                 Format = BuildValidator.SupportedFormat,
@@ -53,10 +57,11 @@ namespace WrathBuildPlanner.Core {
         /// <summary>Message keys for what the file leaves open, in the order the export window lists them.</summary>
         public static List<string> Gaps(CharacterRecord record, BuildFile build) {
             var gaps = new List<string>();
-            if (record.Levels.Count < record.CharacterLevel) gaps.Add("export.gap.history");
+            if (record.Levels.Count < Math.Min(record.CharacterLevel, MaxLevel)) gaps.Add("export.gap.history");
             if (build.Levels.Any(r => r.Level == 1)) gaps.Add("export.gap.scores");
             if (build.Levels.Any(r => r.Level % 4 == 0)) gaps.Add("export.gap.ability_points");
             if (record.SpellsIncomplete) gaps.Add("export.gap.spells");
+            if (record.LegendLevelsLeftOut) gaps.Add("export.gap.legend");
             return gaps;
         }
 

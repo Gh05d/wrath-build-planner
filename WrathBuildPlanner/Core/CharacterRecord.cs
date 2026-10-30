@@ -17,6 +17,8 @@ namespace WrathBuildPlanner.Core {
         public int SkippedPicks;
         /// <summary>Known spells that could not be placed on a level.</summary>
         public bool SpellsIncomplete;
+        /// <summary>Legend levels above 20, which the build format cannot hold.</summary>
+        public bool LegendLevelsLeftOut;
     }
 
     public class RecordLevel {
