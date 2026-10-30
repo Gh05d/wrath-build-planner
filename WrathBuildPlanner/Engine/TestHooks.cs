@@ -62,6 +62,18 @@ namespace WrathBuildPlanner.Engine {
             return player.AllCharacters.Concat(player.RemoteCompanions).FirstOrDefault(u => u.UniqueId == who || u.CharacterName == who);
         }
 
+        /// <summary>Export a character ("main", a UniqueId or a name) the way the settings window's button does.</summary>
+        static string Export(string who) {
+            var unit = Unit(who);
+            if (unit == null) return "NO UNIT " + who;
+            var outcome = CharacterExport.Export(unit);
+            return outcome.Ok ? $"OK {outcome.FileName} gaps={string.Join(",", outcome.Gaps)} skipped={outcome.SkippedPicks}" : "FAILED " + outcome.Error;
+        }
+
+        static string ExportCandidates() =>
+            "party: " + string.Join(", ", CharacterExport.Party().Select(u => $"{u.CharacterName}={u.UniqueId}"))
+            + " | reserve: " + string.Join(", ", CharacterExport.Reserve().Select(u => $"{u.CharacterName}={u.UniqueId}"));
+
         /// <summary>The engine facts the character export relies on (verification probe, plan Task 1).</summary>
         static string ExportProbe(string who) {
             var unit = Unit(who);
