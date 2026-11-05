@@ -95,7 +95,7 @@ namespace WrathBuildPlanner.Engine {
             output.Meta["exported"] = DateTime.UtcNow.ToString("yyyy-MM-dd");
             output.Meta["modVersion"] = Main.ModEntry?.Info?.Version ?? "?";
 
-            foreach (var cls in root.CharacterClasses) {
+            foreach (var cls in root.CharacterClasses.Concat(root.PetClasses)) {
                 var archetypes = cls.Archetypes.Where(a => a != null).ToList();
                 var books = new[] { cls.Spellbook }.Concat(archetypes.Select(a => a.m_ReplaceSpellbook?.Get()));
                 output.Classes.Add(new ClassEntry {

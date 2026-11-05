@@ -19,7 +19,7 @@ namespace WrathBuildPlanner.Engine {
         public static List<UnitEntityData> Party() =>
             Game.Instance.Player.Party.Where(u => u != null && !u.IsPet).Distinct().ToList();
 
-        /// <summary>Recruited characters outside the active party (camp, capital). Pets are left out: the planner has no pet path.</summary>
+        /// <summary>Recruited characters outside the active party (camp, capital). Pets are left out: the export reads character history only.</summary>
         public static List<UnitEntityData> Reserve() {
             var party = new HashSet<string>(Party().Select(u => u.UniqueId));
             return Game.Instance.Player.AllCharacters.Concat(Game.Instance.Player.RemoteCompanions)

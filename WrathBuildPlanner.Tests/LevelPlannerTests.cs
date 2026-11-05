@@ -18,6 +18,17 @@ namespace WrathBuildPlanner.Tests {
         };
 
         [Fact]
+        public void ClassLevelsAddsUpRepeatedClasses() {
+            var levels = LevelPlanner.ClassLevels(new[] {
+                new KeyValuePair<string, int>("Animal Companion", 3),
+                new KeyValuePair<string, int>("Animal Companion", 2),
+                new KeyValuePair<string, int>("Fighter", 1),
+            });
+            Assert.Equal(5, levels["Animal Companion"]);
+            Assert.Equal(1, levels["Fighter"]);
+        }
+
+        [Fact]
         public void RowLookup() {
             var build = Build();
             Assert.Equal("Rogue", LevelPlanner.RowFor(build, 3).Class);

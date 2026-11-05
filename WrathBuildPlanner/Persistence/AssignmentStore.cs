@@ -16,6 +16,8 @@ namespace WrathBuildPlanner.Persistence {
         static Dictionary<string, string> current;
         static string loadedForGame;
         static string pendingForNewGame;
+        // A pet can get its first level before the game runs. Its choice must not replace the main character's.
+        static readonly Dictionary<string, string> pendingPets = new Dictionary<string, string>();
 
         static string Dir => Path.Combine(Main.ModPath, "UserSettings");
 
@@ -26,14 +28,19 @@ namespace WrathBuildPlanner.Persistence {
         static bool InRunningGame => !string.IsNullOrEmpty(GameId) && Game.Instance.CurrentlyLoadedArea != null;
 
         public static string Get(UnitEntityData unit) {
-            if (!InRunningGame) return pendingForNewGame;
+            if (!InRunningGame) {
+                if (unit == null || !unit.IsPet) return pendingForNewGame;
+                return pendingPets.TryGetValue(unit.UniqueId, out string pending) ? pending : null;
+            }
             EnsureLoaded();
             return unit != null && current.TryGetValue(unit.UniqueId, out string file) ? file : null;
         }
 
         public static void Set(UnitEntityData unit, string fileName) {
             if (!InRunningGame) {
-                pendingForNewGame = fileName;
+                if (unit == null || !unit.IsPet) pendingForNewGame = fileName;
+                else if (fileName == null) pendingPets.Remove(unit.UniqueId);
+                else pendingPets[unit.UniqueId] = fileName;
                 return;
             }
             if (unit == null) return;
@@ -46,7 +53,9 @@ namespace WrathBuildPlanner.Persistence {
         /// <summary>Called on every area load: reload for the active save, bind a creation-time choice to the main character.</summary>
         public static void OnAreaLoaded() {
             current = null;
-            if (pendingForNewGame == null || string.IsNullOrEmpty(GameId)) return;
+            if (string.IsNullOrEmpty(GameId)) return;
+            BindPendingPets();
+            if (pendingForNewGame == null) return;
             var main = Game.Instance.Player.MainCharacter.Value;
             if (main == null) return;
             EnsureLoaded();
@@ -58,12 +67,21 @@ namespace WrathBuildPlanner.Persistence {
             pendingForNewGame = null;
         }
 
+        static void BindPendingPets() {
+            if (pendingPets.Count == 0) return;
+            EnsureLoaded();
+            foreach (var pending in pendingPets) current[pending.Key] = pending.Value;
+            pendingPets.Clear();
+            Save();
+        }
+
         /// <summary>
         /// The creation window was closed without completing (CharGenVM.Close). Without this, a build chosen
         /// in a cancelled creation would be bound to the main character of whatever save is loaded next.
         /// </summary>
         public static void ClearPending() {
             pendingForNewGame = null;
+            pendingPets.Clear();
         }
 
         public static void Reset() {
