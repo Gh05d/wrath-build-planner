@@ -27,9 +27,10 @@ namespace WrathBuildPlanner.Engine {
         [HarmonyPatch(typeof(CharGenVM), nameof(CharGenVM.Close))]
         static class Cancelled {
             static void Postfix(CharGenVM __instance) {
-                // Closing a pet's window does not cancel the creation of its master.
-                if (__instance.m_LevelUpController?.Unit?.IsPet == true) return;
-                Persistence.AssignmentStore.ClearPending();
+                // Closing a pet's window does not cancel the creation of its master, only the pet's own choice.
+                var unit = __instance.m_LevelUpController?.Unit;
+                if (unit?.IsPet == true) Persistence.AssignmentStore.ClearPendingPet(unit);
+                else Persistence.AssignmentStore.ClearPending();
             }
         }
 

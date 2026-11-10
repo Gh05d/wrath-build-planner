@@ -304,20 +304,24 @@ namespace WrathBuildPlanner.UI {
         static List<UnitEntityData> Characters() {
             var units = new List<UnitEntityData>();
             var creating = WindowTracker.Controller?.Unit;
-            if (creating != null) units.Add(creating);
             var player = Game.Instance?.Player;
             var party = player?.Party;
+            // The unit in the open window comes first, except a pet whose master is listed: it stays below its
+            // master, where its plain name is unambiguous (two Cavaliers can each have a "Horse").
+            bool belowMaster = creating != null && creating.IsPet && creating.Master != null && party != null && party.Contains(creating.Master);
+            var top = creating != null && !belowMaster ? creating : null;
+            if (top != null) units.Add(top);
             if (party == null || party.Count == 0) return units;
             var withPets = player.PartyAndPets;
             foreach (var member in party.Where(u => !u.IsPet)) {
-                if (member != creating) units.Add(member);
-                units.AddRange(withPets.Where(p => p.IsPet && p.Master == member && p != creating));
+                if (member != top) units.Add(member);
+                units.AddRange(withPets.Where(p => p.IsPet && p.Master == member && p != top));
             }
             return units;
         }
 
-        // Several characters can have the same kind of pet.
-        // A pet's row sits right below its master's, so its own name is enough.
+        // Several characters can have the same kind of pet; a pet's row sits right below its master's
+        // (Characters), so its own name is enough.
         static string RowName(UnitEntityData unit) => unit.CharacterName;
 
         static string Notice(UnitEntityData unit, LibraryEntry entry) {

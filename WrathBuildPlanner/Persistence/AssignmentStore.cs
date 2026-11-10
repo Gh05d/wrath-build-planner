@@ -84,6 +84,11 @@ namespace WrathBuildPlanner.Persistence {
             pendingPets.Clear();
         }
 
+        /// <summary>A pet's window was closed without completing: drop only that pet's pre-game choice.</summary>
+        public static void ClearPendingPet(UnitEntityData pet) {
+            if (pet != null) pendingPets.Remove(pet.UniqueId);
+        }
+
         public static void Reset() {
             current = null;
             loadedForGame = null;

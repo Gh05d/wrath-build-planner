@@ -54,9 +54,10 @@ expect "$d" 'BasicFeatSelection@1=Toughness' 'Feat page pick at level 1'
 expect "$d" '@3=Dodge' 'bare pick at level 3'
 expect "$d" 'Str 17' 'attribute point on Strength at level 4'
 
-# The Builds window lists the horse under its own name only (it comes first: its level 5 is open).
+# The Builds window lists the horse below its master under its own name, also while its own window
+# (its level 5, opened by the game) is open.
 rows=$(bridge "invoke $H.PartyRows" | sed -n 's/^returned //p' | tr -d '\r')
-expect_eq "$rows" 'Sturmwind | BridgeTest' 'Builds window rows'
+expect_eq "$rows" 'BridgeTest | Sturmwind' 'Builds window rows'
 
 log=$(ssh -o ConnectTimeout=6 deck-direct "cat \"\$(ls -t '$MOD_DIR_DECK/Logs/'*.log | head -1)\"")
 expect "$log" "apply 'Test Horse' mode=CharGen level=1" 'mod log: horse creation applied'
