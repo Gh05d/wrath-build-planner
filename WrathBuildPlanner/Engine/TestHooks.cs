@@ -205,6 +205,8 @@ namespace WrathBuildPlanner.Engine {
 
         static string LibraryScroll() => UI.BuildsWindow.LibraryScrollState();
 
+        static string PartyRows() => UI.BuildsWindow.PartyRows();
+
         /// <summary>Import text given as base64 (DevBridge arguments cannot contain spaces).</summary>
         static string ImportText(string base64) {
             string text = Encoding.UTF8.GetString(System.Convert.FromBase64String(base64));

@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "name": "Test Pet Master",
+  "for": "main",
+  "skills": ["Athletics", "Perception", "Mobility", "Persuasion", "Knowledge (Arcana)"],
+  "levels": [
+    { "level": 1, "class": "Fighter" },
+    { "level": 2, "class": "Cavalier",
+      "picks": [ { "in": "Order", "pick": "Order of the Cockatrice" }, "Horse" ] },
+    { "level": 3, "class": "Cavalier" },
+    { "level": 4, "class": "Cavalier", "abilityPoint": "Charisma" },
+    { "level": 5, "class": "Cavalier" },
+    { "level": 6, "class": "Cavalier" }
+  ]
+}

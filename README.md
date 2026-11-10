@@ -21,6 +21,13 @@ can ship with the mod for everyone — post it on the [Nexus page](https://www.n
 The mod never finishes a level for you, and it only fills what is still open — picks you made
 yourself stay. Portrait, appearance, voice and name are always yours.
 
+## Animal companions
+
+A pet gets a build of its own, in the same format: `"class": "Animal Companion"` on every level, the archetype
+(Bulwark, Racer, …) on level 1, skills, feats and the attribute point as for a character. In the Builds window the
+pet is listed right below its master. Its level-up opens from the pet's portrait; the first one also asks for its
+name. Exporting a pet as a build is not supported.
+
 ## Saving a character as a build
 
 Built a character in the game you want to keep, a mercenary for example? Open the mod settings (Ctrl+F10,

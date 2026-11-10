@@ -49,3 +49,9 @@ test('races and mythic paths', () => {
   assert.ok(names.races.some(r => r[0] === 'Human'));
   assert.ok(names.mythicPaths.some(p => p[0] === 'Angel'));
 });
+
+test('pet classes are exported with their archetypes', () => {
+  const pet = names.classes.find(c => c.n[0] === 'Animal Companion');
+  assert.ok(pet, 'Animal Companion');
+  assert.ok(pet.archetypes.some(a => a[0] === 'Bulwark'), 'Bulwark archetype');
+});

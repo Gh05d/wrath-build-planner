@@ -35,6 +35,9 @@ namespace WrathBuildPlanner.UI {
         /// For in-game tests: the library's scroll position (1 = top) and a point over a row's label, where no
         /// button is, in window pixels from the top left (xdotool). "closed" when the window is not open.
         /// </summary>
+        /// <summary>The party list's row labels in order, for tests.</summary>
+        internal static string PartyRows() => string.Join(" | ", Characters().Select(RowName));
+
         internal static string LibraryScrollState() {
             if (!IsOpen || libraryList == null) return "closed";
             var scroll = libraryList.GetComponentInParent<ScrollRect>();
@@ -314,8 +317,8 @@ namespace WrathBuildPlanner.UI {
         }
 
         // Several characters can have the same kind of pet.
-        static string RowName(UnitEntityData unit) =>
-            unit.IsPet && unit.Master != null ? $"{unit.CharacterName} ({unit.Master.CharacterName})" : unit.CharacterName;
+        // A pet's row sits right below its master's, so its own name is enough.
+        static string RowName(UnitEntityData unit) => unit.CharacterName;
 
         static string Notice(UnitEntityData unit, LibraryEntry entry) {
             if (entry == null || !entry.Ok) return null;
