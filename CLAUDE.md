@@ -78,3 +78,5 @@ Scripts assert on the English result text: game language English, mod language `
 `all.sh` checks the Deck before each script and caps each at 20 minutes: a lost USB link once stalled a run silently for two hours. Standby cannot be blocked over SSH (`systemd-inhibit` needs admin auth there); Steam suspends after 1 h without real input on AC (`IdleSuspendACSeconds`), 20 min on battery — xdotool input does not count.
 Test builds must match the game's own counts: a spell the class does not grant that level ends in `Open Spell … (NoFreeSlot)`, a missing `abilityPoint` on levels 4/8/… leaves Next blocked — `finish` then reports "Complete never appeared". Look at the `<name>-stuck.png` shot before suspecting the mod.
 `Engine/TestHooks.cs` holds the static entry points the scripts call through DevBridge.
+`launch.sh` says "game did not start" after a `kill -9` although Wrath comes up a little later: run it again (it sees the running game and presses past the title screen; DevBridge only answers once the main menu exists).
+DevBridge `ui` lists only buttons, never labels: assert on window text through a `TestHooks` entry point (`PartyRows`, `BarText`).
