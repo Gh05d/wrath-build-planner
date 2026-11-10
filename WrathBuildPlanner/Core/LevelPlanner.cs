@@ -29,6 +29,14 @@ namespace WrathBuildPlanner.Core {
             return expected;
         }
 
+        /// <summary>Levels per class name. A unit can carry several entries of one class, so they are added up.</summary>
+        public static Dictionary<string, int> ClassLevels(IEnumerable<KeyValuePair<string, int>> entries) {
+            var levels = new Dictionary<string, int>();
+            foreach (var entry in entries)
+                levels[entry.Key] = levels.TryGetValue(entry.Key, out int have) ? have + entry.Value : entry.Value;
+            return levels;
+        }
+
         public static HistoryCheck CompareHistory(Dictionary<string, int> expected, Dictionary<string, int> actual) {
             var check = new HistoryCheck();
             if (expected == null || actual == null) return check;

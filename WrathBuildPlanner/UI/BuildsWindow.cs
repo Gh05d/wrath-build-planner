@@ -35,6 +35,9 @@ namespace WrathBuildPlanner.UI {
         /// For in-game tests: the library's scroll position (1 = top) and a point over a row's label, where no
         /// button is, in window pixels from the top left (xdotool). "closed" when the window is not open.
         /// </summary>
+        /// <summary>The party list's row labels in order, for tests.</summary>
+        internal static string PartyRows() => string.Join(" | ", Characters().Select(RowName));
+
         internal static string LibraryScrollState() {
             if (!IsOpen || libraryList == null) return "closed";
             var scroll = libraryList.GetComponentInParent<ScrollRect>();
@@ -259,7 +262,7 @@ namespace WrathBuildPlanner.UI {
                     : entry != null && entry.Ok ? DisplayName(entry) : Strings.Format("bar.missing", fileName);
 
                 var row = Widgets.Row(partyList.transform, "Unit", RowHeight);
-                Widgets.InRow(Widgets.InkLabel(row, unit.CharacterName, RowFont).gameObject, 220f, 0f);
+                Widgets.InRow(Widgets.InkLabel(row, RowName(unit), RowFont).gameObject, 220f, 0f);
                 Widgets.ActionButton(row.transform, "Pick", buildName, ButtonFont, () => PickBuild(captured), 300f, 1f);
 
                 string notice = Notice(unit, entry);
@@ -302,22 +305,31 @@ namespace WrathBuildPlanner.UI {
             var units = new List<UnitEntityData>();
             var creating = WindowTracker.Controller?.Unit;
             if (creating != null) units.Add(creating);
-            var party = Game.Instance?.Player?.Party;
-            if (party != null) units.AddRange(party.Where(u => u != creating));
+            var player = Game.Instance?.Player;
+            var party = player?.Party;
+            if (party == null || party.Count == 0) return units;
+            var withPets = player.PartyAndPets;
+            foreach (var member in party.Where(u => !u.IsPet)) {
+                if (member != creating) units.Add(member);
+                units.AddRange(withPets.Where(p => p.IsPet && p.Master == member && p != creating));
+            }
             return units;
         }
+
+        // Several characters can have the same kind of pet.
+        // A pet's row sits right below its master's, so its own name is enough.
+        static string RowName(UnitEntityData unit) => unit.CharacterName;
 
         static string Notice(UnitEntityData unit, LibraryEntry entry) {
             if (entry == null || !entry.Ok) return null;
             int next = unit.Progression.CharacterLevel + 1;
-            var classes = GameNames.Classes();
+            var classes = GameNames.ClassesFor(unit);
             Func<string, string> canonical = name => {
                 var outcome = NameMatcher.Match(name, classes);
                 return outcome.Kind == MatchKind.Unique ? outcome.Match.Display : name;
             };
             var expected = LevelPlanner.ExpectedClassLevels(entry.Build, next, canonical);
-            var actual = unit.Progression.Classes.Where(c => !c.CharacterClass.IsMythic).ToDictionary(c => c.CharacterClass.Name, c => c.Level);
-            var history = LevelPlanner.CompareHistory(expected, actual);
+            var history = LevelPlanner.CompareHistory(expected, GameNames.ClassLevels(unit));
             if (history.Comparable && !history.Matches) return Strings.Format("bar.history", history.Expected, history.Actual);
             return LevelPlanner.RowFor(entry.Build, next) != null ? Strings.Format("window.next_level", next) : Strings.Format("bar.no_row", next);
         }

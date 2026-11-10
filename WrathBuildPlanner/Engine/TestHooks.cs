@@ -35,8 +35,12 @@ namespace WrathBuildPlanner.Engine {
             return sb.ToString();
         }
 
-        static string Describe() {
-            var unit = Game.Instance.Player.MainCharacter.Value;
+        static string Describe() => DescribeUnit("main");
+
+        /// <summary>Describe for any unit ("main", a UniqueId or a name such as a pet's).</summary>
+        static string DescribeUnit(string who) {
+            var unit = Unit(who);
+            if (unit == null) return "NO UNIT " + who;
             var sb = new StringBuilder();
             sb.Append($"{unit.CharacterName} L{unit.Progression.CharacterLevel} mythic {unit.Progression.MythicLevel} | ");
             sb.Append(string.Join(", ", unit.Progression.Classes.Select(c =>
@@ -60,6 +64,20 @@ namespace WrathBuildPlanner.Engine {
             var player = Game.Instance.Player;
             if (who == "main") return player.MainCharacter.Value;
             return player.AllCharacters.Concat(player.RemoteCompanions).FirstOrDefault(u => u.UniqueId == who || u.CharacterName == who);
+        }
+
+        /// <summary>
+        /// Opens a unit's level-up the way its portrait's button does (PartyCharacterVM.LevelUp, IL): creation mode
+        /// while the unit has no level yet — a pet right after it was chosen — otherwise a normal level-up.
+        /// </summary>
+        static string OpenLevelUp(string who) {
+            var unit = Unit(who);
+            if (unit == null) return "NO UNIT " + who;
+            var mode = unit.Progression.CharacterLevel <= 0
+                ? Kingmaker.UnitLogic.Class.LevelUp.LevelUpState.CharBuildMode.CharGen
+                : Kingmaker.UnitLogic.Class.LevelUp.LevelUpState.CharBuildMode.LevelUp;
+            Kingmaker.UnitLogic.Class.LevelUp.LevelUpConfig.Create(unit, mode).OpenUI();
+            return $"opened {unit.CharacterName} {mode}";
         }
 
         /// <summary>Export a character ("main", a UniqueId or a name) the way the settings window's button does.</summary>
@@ -186,6 +204,8 @@ namespace WrathBuildPlanner.Engine {
         }
 
         static string LibraryScroll() => UI.BuildsWindow.LibraryScrollState();
+
+        static string PartyRows() => UI.BuildsWindow.PartyRows();
 
         /// <summary>Import text given as base64 (DevBridge arguments cannot contain spaces).</summary>
         static string ImportText(string base64) {

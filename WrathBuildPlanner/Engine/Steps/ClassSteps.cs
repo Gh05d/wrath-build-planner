@@ -17,7 +17,7 @@ namespace WrathBuildPlanner.Engine.Steps {
             if (string.IsNullOrWhiteSpace(wanted)) return;
             string label = Messages.Get("step.class", wanted);
 
-            var outcome = NameMatcher.Match(wanted, GameNames.Classes());
+            var outcome = NameMatcher.Match(wanted, GameNames.ClassesFor(context.Controller.Unit));
             if (outcome.Kind != MatchKind.Unique) {
                 context.Report.Steps.Add(StepResult.Open(label,
                     outcome.Kind == MatchKind.Ambiguous ? OpenReason.Ambiguous : OpenReason.NotFound, null, outcome.Suggestions));

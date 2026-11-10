@@ -6,6 +6,7 @@ using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Classes;
 using Kingmaker.Blueprints.Classes.Selection;
 using Kingmaker.Blueprints.Facts;
+using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Localization;
 using Kingmaker.Localization.Shared;
 using Kingmaker.UI;
@@ -133,11 +134,26 @@ namespace WrathBuildPlanner.Engine {
         public static List<NameCandidate> Classes() =>
             Game.Instance.BlueprintRoot.Progression.CharacterClasses.Select(Of).ToList();
 
+        /// <summary>Pets have their own class list (ProgressionRoot.PetClasses); the class page offers it for a pet.</summary>
+        public static List<NameCandidate> PetClasses() =>
+            Game.Instance.BlueprintRoot.Progression.PetClasses.Select(Of).ToList();
+
+        public static List<NameCandidate> ClassesFor(UnitEntityData unit) =>
+            unit != null && unit.IsPet ? PetClasses() : Classes();
+
+        /// <summary>The unit's non-mythic class levels by class name.</summary>
+        public static Dictionary<string, int> ClassLevels(UnitEntityData unit) =>
+            LevelPlanner.ClassLevels(unit.Progression.Classes
+                .Where(c => !c.CharacterClass.IsMythic)
+                .Select(c => new KeyValuePair<string, int>(c.CharacterClass.Name, c.Level)));
+
         public static List<NameCandidate> Races() =>
             Game.Instance.BlueprintRoot.Progression.CharacterRaces.Select(Of).ToList();
 
         class KnownNames : IKnownNames {
-            public bool ClassExists(string name) => NameMatcher.Match(name, Classes()).Kind == MatchKind.Unique;
+            // A file does not say who it is for: it is valid when either list has the class. Apply checks against the unit.
+            public bool ClassExists(string name) =>
+                NameMatcher.Match(name, Classes().Concat(PetClasses()).ToList()).Kind == MatchKind.Unique;
             public bool RaceExists(string name) => NameMatcher.Match(name, Races()).Kind == MatchKind.Unique;
         }
 

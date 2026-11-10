@@ -59,7 +59,7 @@ namespace WrathBuildPlanner.Engine {
 
             var spells = new SpellStep(context);
             bool classFailed = false;
-            foreach (var step in StepsFor(mode, spells)) {
+            foreach (var step in StepsFor(mode, controller.Unit.IsPet, spells)) {
                 if (classFailed && (step is SkillStep || step is PickStep)) continue;
                 try {
                     step.Run(context);
@@ -87,22 +87,24 @@ namespace WrathBuildPlanner.Engine {
             return report;
         }
 
-        static IEnumerable<IApplyStep> StepsFor(LevelUpState.CharBuildMode mode, SpellStep spells) {
+        static IEnumerable<IApplyStep> StepsFor(LevelUpState.CharBuildMode mode, bool pet, SpellStep spells) {
             if (mode == LevelUpState.CharBuildMode.Mythic) {
                 yield return new MythicPathStep();
                 yield return new PickStep();
                 yield break;
             }
-            if (mode == LevelUpState.CharBuildMode.CharGen) {
+            // A pet's first level opens in creation mode, but the window has no race, ability score or alignment page for it.
+            bool creation = mode == LevelUpState.CharBuildMode.CharGen && !pet;
+            if (creation) {
                 yield return new LeavePregenStep();
                 yield return new RaceStep();
             }
             yield return new ClassStep();
             yield return new ArchetypeStep();
-            if (mode == LevelUpState.CharBuildMode.CharGen) {
+            if (creation) {
                 yield return new PointBuyStep();
                 yield return new AlignmentStep();
-            } else {
+            } else if (mode != LevelUpState.CharBuildMode.CharGen) {
                 yield return new AttributePointStep();
             }
             yield return new SkillStep();
@@ -111,16 +113,14 @@ namespace WrathBuildPlanner.Engine {
 
         static HistoryCheck History(ApplyContext context) {
             if (context.Row == null) return new HistoryCheck();
-            var classes = GameNames.Classes();
+            var unit = context.Controller.Unit;
+            var classes = GameNames.ClassesFor(unit);
             Func<string, string> canonical = name => {
                 var outcome = NameMatcher.Match(name, classes);
                 return outcome.Kind == MatchKind.Unique ? outcome.Match.Display : name;
             };
             var expected = LevelPlanner.ExpectedClassLevels(context.Build, context.Report.Level, canonical);
-            var actual = context.Controller.Unit.Progression.Classes
-                .Where(c => !c.CharacterClass.IsMythic)
-                .ToDictionary(c => c.CharacterClass.Name, c => c.Level);
-            return LevelPlanner.CompareHistory(expected, actual);
+            return LevelPlanner.CompareHistory(expected, GameNames.ClassLevels(unit));
         }
     }
 }

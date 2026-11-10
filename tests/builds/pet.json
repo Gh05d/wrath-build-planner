@@ -1,0 +1,13 @@
+{
+  "format": 1,
+  "name": "Test Horse",
+  "for": "any",
+  "skills": ["Perception", "Athletics"],
+  "levels": [
+    { "level": 1, "class": "Animal Companion", "archetype": "Bulwark",
+      "picks": [ { "in": "Feat", "pick": "Toughness" } ] },
+    { "level": 2, "class": "Animal Companion" },
+    { "level": 3, "class": "Animal Companion", "picks": [ "Dodge" ] },
+    { "level": 4, "class": "Animal Companion", "abilityPoint": "Strength" }
+  ]
+}
